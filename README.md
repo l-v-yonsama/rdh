@@ -1,2 +1,1 @@
-# rdh
-Resultset data holder
+Database resultset holder.
