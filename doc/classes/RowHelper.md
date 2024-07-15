@@ -50,7 +50,7 @@
 
 #### Defined in
 
-resource/ResultSetDataBuilder.ts:161
+[resource/ResultSetDataBuilder.ts:161](https://github.com/l-v-yonsama/rdh/blob/967e20c40a0481062b3a65a0ad7047e6417e1de1/src/resource/ResultSetDataBuilder.ts#L161)
 
 ___
 
@@ -71,7 +71,7 @@ ___
 
 #### Defined in
 
-resource/ResultSetDataBuilder.ts:167
+[resource/ResultSetDataBuilder.ts:167](https://github.com/l-v-yonsama/rdh/blob/967e20c40a0481062b3a65a0ad7047e6417e1de1/src/resource/ResultSetDataBuilder.ts#L167)
 
 ___
 
@@ -99,7 +99,7 @@ ___
 
 #### Defined in
 
-resource/ResultSetDataBuilder.ts:149
+[resource/ResultSetDataBuilder.ts:149](https://github.com/l-v-yonsama/rdh/blob/967e20c40a0481062b3a65a0ad7047e6417e1de1/src/resource/ResultSetDataBuilder.ts#L149)
 
 ___
 
@@ -126,7 +126,7 @@ ___
 
 #### Defined in
 
-resource/ResultSetDataBuilder.ts:133
+[resource/ResultSetDataBuilder.ts:133](https://github.com/l-v-yonsama/rdh/blob/967e20c40a0481062b3a65a0ad7047e6417e1de1/src/resource/ResultSetDataBuilder.ts#L133)
 
 ___
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-resource/ResultSetDataBuilder.ts:119
+[resource/ResultSetDataBuilder.ts:119](https://github.com/l-v-yonsama/rdh/blob/967e20c40a0481062b3a65a0ad7047e6417e1de1/src/resource/ResultSetDataBuilder.ts#L119)
 
 ___
 
@@ -175,7 +175,7 @@ ___
 
 #### Defined in
 
-resource/ResultSetDataBuilder.ts:221
+[resource/ResultSetDataBuilder.ts:221](https://github.com/l-v-yonsama/rdh/blob/967e20c40a0481062b3a65a0ad7047e6417e1de1/src/resource/ResultSetDataBuilder.ts#L221)
 
 ___
 
@@ -196,7 +196,7 @@ ___
 
 #### Defined in
 
-resource/ResultSetDataBuilder.ts:91
+[resource/ResultSetDataBuilder.ts:91](https://github.com/l-v-yonsama/rdh/blob/967e20c40a0481062b3a65a0ad7047e6417e1de1/src/resource/ResultSetDataBuilder.ts#L91)
 
 ___
 
@@ -217,7 +217,7 @@ ___
 
 #### Defined in
 
-resource/ResultSetDataBuilder.ts:207
+[resource/ResultSetDataBuilder.ts:207](https://github.com/l-v-yonsama/rdh/blob/967e20c40a0481062b3a65a0ad7047e6417e1de1/src/resource/ResultSetDataBuilder.ts#L207)
 
 ___
 
@@ -238,7 +238,7 @@ ___
 
 #### Defined in
 
-resource/ResultSetDataBuilder.ts:196
+[resource/ResultSetDataBuilder.ts:196](https://github.com/l-v-yonsama/rdh/blob/967e20c40a0481062b3a65a0ad7047e6417e1de1/src/resource/ResultSetDataBuilder.ts#L196)
 
 ___
 
@@ -259,7 +259,7 @@ ___
 
 #### Defined in
 
-resource/ResultSetDataBuilder.ts:211
+[resource/ResultSetDataBuilder.ts:211](https://github.com/l-v-yonsama/rdh/blob/967e20c40a0481062b3a65a0ad7047e6417e1de1/src/resource/ResultSetDataBuilder.ts#L211)
 
 ___
 
@@ -281,4 +281,4 @@ ___
 
 #### Defined in
 
-resource/ResultSetDataBuilder.ts:108
+[resource/ResultSetDataBuilder.ts:108](https://github.com/l-v-yonsama/rdh/blob/967e20c40a0481062b3a65a0ad7047e6417e1de1/src/resource/ResultSetDataBuilder.ts#L108)
