@@ -524,12 +524,10 @@ class MarkdownString extends BaseString {
 }
 
 class CsvString extends BaseString {
-  constructor(
-    rdh: ResultSetData,
-    params: ToStringParam,
-    private delimiter = ","
-  ) {
+  private readonly delimiter: string;
+  constructor(rdh: ResultSetData, params: ToStringParam) {
     super(rdh, params);
+    this.delimiter = params.csv?.delimiter ?? ",";
   }
 
   noKeys(): string {
@@ -598,7 +596,7 @@ class CsvString extends BaseString {
   }
 
   pushLine(p: PushLineParams): void {
-    const { delimiter, rdhKeys } = this;
+    const { rdhKeys, delimiter } = this;
     const { sRow, rawString: s, abbrRow } = p;
 
     const appendStr = abbrRow ? rdhKeys.map((_) => "...").join(delimiter) : s;

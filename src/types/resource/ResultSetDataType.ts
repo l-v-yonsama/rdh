@@ -21,6 +21,7 @@ export type RdhMeta = {
   [key: string]: any;
 };
 
+export type CsvDelimiter = "," | "\t" | " ";
 export type ToStringParam = {
   maxPrintLines?: number;
   maxCellValueLength?: number;
@@ -33,6 +34,9 @@ export type ToStringParam = {
   dateFormat?: "YYYY-MM-DD" | "YYYY-MM-DD HH:mm:ss";
   eol?: "\n" | "\r" | "\r\n";
   binaryToHex?: boolean;
+  csv?: {
+    delimiter: CsvDelimiter;
+  };
 };
 
 export type SampleClassPair = {

@@ -583,7 +583,7 @@ export class ResultSetDataBuilder {
     return retList;
   }
 
-  toCsv(params?: ToStringParam & { delimiter?: string }): string {
+  toCsv(params?: ToStringParam): string {
     return toContentString(this.rs, "csv", params);
   }
 
