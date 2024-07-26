@@ -147,6 +147,15 @@ export function isDateTimeOrDateOrTime(type: GeneralColumnType): boolean {
   return false;
 }
 
+export function isDateTime(type: GeneralColumnType): boolean {
+  switch (type) {
+    case GeneralColumnType.TIMESTAMP:
+    case GeneralColumnType.TIMESTAMP_WITH_TIME_ZONE:
+      return true;
+  }
+  return false;
+}
+
 export function isTime(type: GeneralColumnType): boolean {
   switch (type) {
     case GeneralColumnType.TIME:

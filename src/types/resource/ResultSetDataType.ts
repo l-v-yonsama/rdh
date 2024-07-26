@@ -30,7 +30,9 @@ export type ToStringParam = {
   withCodeLabel?: boolean;
   withRuleViolation?: boolean;
   keyNames?: string[];
+  dateFormat?: "YYYY-MM-DD" | "YYYY-MM-DD HH:mm:ss";
   eol?: "\n" | "\r" | "\r\n";
+  binaryToHex?: boolean;
 };
 
 export type SampleClassPair = {
