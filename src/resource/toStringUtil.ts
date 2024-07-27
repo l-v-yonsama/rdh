@@ -446,7 +446,7 @@ class MarkdownString extends BaseString {
     if (withRuleViolation) {
       const legend = this.createRuleMarkerLegend(eol);
       if (legend) {
-        this.append(eol + eol + "```" + eol + legend + eol + "```" + eol);
+        this.append(eol + "```" + eol + legend + eol + "```");
       }
     }
   }
@@ -565,7 +565,7 @@ class CsvString extends BaseString {
     if (withRuleViolation) {
       const legend = this.createRuleMarkerLegend(eol);
       if (legend) {
-        this.append(eol + eol + "```" + eol + legend + eol + "```" + eol);
+        this.append(eol + "```" + eol + legend + eol + "```");
       }
     }
   }

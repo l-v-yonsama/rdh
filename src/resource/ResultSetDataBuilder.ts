@@ -69,7 +69,7 @@ export function isResultSetDataBuilder(
 function toRdhKeys(keys: Array<string | RdhKey>): RdhKey[] {
   return keys.map((k) => {
     if (typeof k === "string") {
-      return createRdhKey({ name: k });
+      return createRdhKey({ name: k, type: GeneralColumnType.UNKNOWN });
     } else {
       return k;
     }
@@ -243,6 +243,12 @@ export class ResultSetDataBuilder {
     return this.rs;
   }
 
+  updateKeyType(keyName: string, type: GeneralColumnType): void {
+    const key = this.rs.keys.find((it) => it.name === keyName);
+    if (key) {
+      key.type = type;
+    }
+  }
   updateKeyComment(keyName: string, comment: string): void {
     const key = this.rs.keys.find((it) => it.name === keyName);
     if (key) {
