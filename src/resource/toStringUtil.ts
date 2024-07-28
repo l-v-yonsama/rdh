@@ -131,7 +131,7 @@ abstract class BaseString {
     } else if (isBinaryLike(keyType)) {
       if (binaryToHex) {
         if (v instanceof Buffer) {
-          s = `B'${v.toString("hex")}`;
+          s = `B'${v.toString("hex", 0, Math.max(v.byteLength, 64))}`;
         }
       } else {
         s = "(BINARY)";

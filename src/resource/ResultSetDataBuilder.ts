@@ -3,7 +3,7 @@ import * as ss from "simple-statistics";
 import {
   AnnotationType,
   CellAnnotation,
-  GeneralColumnType,
+  GeneralColumnType as GC,
   RdhKey,
   RdhMeta,
   RdhRow,
@@ -16,6 +16,7 @@ import {
 } from "../types";
 import isDate, { toBoolean, toDate } from "../utils";
 import {
+  isBinaryLike,
   isDateTimeOrDate,
   isNumericLike,
   isTextLike,
@@ -33,7 +34,7 @@ export function createRdhKey({
 }: {
   name: string;
   comment?: string;
-  type?: GeneralColumnType;
+  type?: GC;
   width?: number;
   required?: boolean;
   align?: RdhKey["align"];
@@ -49,7 +50,7 @@ export function createRdhKey({
 
   const key: RdhKey = {
     name,
-    type: type ?? GeneralColumnType.UNKNOWN,
+    type: type ?? GC.UNKNOWN,
     comment,
     width,
     required,
@@ -69,7 +70,7 @@ export function isResultSetDataBuilder(
 function toRdhKeys(keys: Array<string | RdhKey>): RdhKey[] {
   return keys.map((k) => {
     if (typeof k === "string") {
-      return createRdhKey({ name: k, type: GeneralColumnType.UNKNOWN });
+      return createRdhKey({ name: k, type: GC.UNKNOWN });
     } else {
       return k;
     }
@@ -243,7 +244,7 @@ export class ResultSetDataBuilder {
     return this.rs;
   }
 
-  updateKeyType(keyName: string, type: GeneralColumnType): void {
+  updateKeyType(keyName: string, type: GC): void {
     const key = this.rs.keys.find((it) => it.name === keyName);
     if (key) {
       key.type = type;
@@ -299,7 +300,7 @@ export class ResultSetDataBuilder {
       {
         name: "message",
         comment: "",
-        type: GeneralColumnType.TEXT,
+        type: GC.TEXT,
         width: 200,
       },
     ]);
@@ -322,11 +323,26 @@ export class ResultSetDataBuilder {
       const dateKeys = rdb.rs.keys
         .filter((k) => isDateTimeOrDate(k.type))
         .map((k) => k.name);
+      const binaryKeys = rdb.rs.keys
+        .filter((k) => isBinaryLike(k.type))
+        .map((k) => k.name);
       plainObj.rows.forEach((row) => {
         const { values, meta } = row;
         for (const dateKey of dateKeys) {
           const v = values[dateKey];
           values[dateKey] = v === null ? null : toDate(v);
+        }
+        for (const binaryKey of binaryKeys) {
+          const v = values[binaryKey];
+          if (
+            v &&
+            typeof v === "object" &&
+            v["type"] === "Buffer" &&
+            v["data"] &&
+            Array.isArray(v["data"])
+          ) {
+            values[binaryKey] = Buffer.from(v.data);
+          }
         }
         rdb.addRow(values, meta);
       });
@@ -388,17 +404,17 @@ export class ResultSetDataBuilder {
           ret = new ResultSetDataBuilder([
             createRdhKey({
               name: "KEY",
-              type: GeneralColumnType.TEXT,
+              type: GC.TEXT,
               width: 120,
             }),
             createRdhKey({
               name: "TYPE",
-              type: GeneralColumnType.TEXT,
+              type: GC.TEXT,
               width: 80,
             }),
             createRdhKey({
               name: "VALUE",
-              type: GeneralColumnType.JSON,
+              type: GC.JSON,
               width: 400,
             }),
           ]);
@@ -456,9 +472,7 @@ export class ResultSetDataBuilder {
           })
         );
       });
-    desc_keys.unshift(
-      createRdhKey({ name: "stat", type: GeneralColumnType.TEXT })
-    );
+    desc_keys.unshift(createRdhKey({ name: "stat", type: GC.TEXT }));
     const ret = new ResultSetDataBuilder(desc_keys);
 
     const count_values: any = { stat: "count" };
@@ -522,18 +536,14 @@ export class ResultSetDataBuilder {
     this.drop(key);
     if (constructor === "Float32Array" || constructor === "Float64Array") {
       list = Array.from(list);
-      this.rs.keys.push(
-        createRdhKey({ name: key, type: GeneralColumnType.NUMERIC })
-      );
+      this.rs.keys.push(createRdhKey({ name: key, type: GC.NUMERIC }));
     } else if (
       constructor === "Int8Array" ||
       constructor === "Int16Array" ||
       constructor === "Int32Array"
     ) {
       list = Array.from(list);
-      this.rs.keys.push(
-        createRdhKey({ name: key, type: GeneralColumnType.INTEGER })
-      );
+      this.rs.keys.push(createRdhKey({ name: key, type: GC.INTEGER }));
     } else {
       const types = new Set<string>();
       list.forEach((v: any) => {
@@ -542,13 +552,9 @@ export class ResultSetDataBuilder {
         }
       });
       if (types.size === 1 && types.has("number")) {
-        this.rs.keys.push(
-          createRdhKey({ name: key, type: GeneralColumnType.NUMERIC })
-        );
+        this.rs.keys.push(createRdhKey({ name: key, type: GC.NUMERIC }));
       } else {
-        this.rs.keys.push(
-          createRdhKey({ name: key, type: GeneralColumnType.UNKNOWN })
-        );
+        this.rs.keys.push(createRdhKey({ name: key, type: GC.UNKNOWN }));
       }
     }
     list.forEach((v: any, i: number) => {
@@ -687,9 +693,9 @@ export class ResultSetDataBuilder {
         };
 
         if (types.has("string")) {
-          k.type = GeneralColumnType.TEXT;
+          k.type = GC.TEXT;
         } else if (types.has("boolean")) {
-          k.type = GeneralColumnType.BOOLEAN;
+          k.type = GC.BOOLEAN;
           for (let i = 0; i < length; i++) {
             const v = this.rs.rows[i].values[k.name];
             if (v === "") {
@@ -699,11 +705,11 @@ export class ResultSetDataBuilder {
             }
           }
         } else if (types.has("number")) {
-          k.type = GeneralColumnType.NUMERIC;
+          k.type = GC.NUMERIC;
           k.align = "right";
           emptyToNull();
         } else if (types.has("date")) {
-          k.type = GeneralColumnType.DATE;
+          k.type = GC.DATE;
           emptyToNull();
         }
       }

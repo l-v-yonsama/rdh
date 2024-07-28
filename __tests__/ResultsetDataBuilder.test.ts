@@ -64,6 +64,17 @@ const createRdb = (): ResultSetDataBuilder => {
 describe("ResultSetDataBuilder", () => {
   const rdb = createRdb();
 
+  describe("from", () => {
+    it("should be copied Buffer", () => {
+      const copied = ResultSetDataBuilder.from(rdb.rs);
+      expect(copied.rs.rows).toHaveLength(30);
+      const row = copied.rs.rows[0];
+      expect(row.values.b1).not.toBeUndefined();
+      expect(Buffer.isBuffer(row.values.b1)).toBe(true);
+      expect(row.values.b1).toEqual(Buffer.from([0, 1, 2, 244]));
+    });
+  });
+
   describe("toMarkdown", () => {
     it("should be success withCodeLabel", () => {
       expect(rdb.toMarkdown({ withCodeLabel: true })).toEqual(
@@ -99,6 +110,23 @@ describe("ResultSetDataBuilder", () => {
 1 <yellow> 28  2024-08-01 2024-08-01 10:20:30 (BINARY)
 2 <red>    29  2024-08-01 2024-08-01 10:20:30 (BINARY)
 0 <green>      2024-08-01 2024-08-01 10:20:30 (BINARY)
+`);
+    });
+
+    it("should be success binaryToHex", () => {
+      expect(rdb.toString({ binaryToHex: true }))
+        .toEqual(`n1  s1  d1         t1                  b1        
+1   1   2024-08-01 2024-08-01 10:20:30 B'000102f4
+2   2   2024-08-01 2024-08-01 10:20:30 B'000102f4
+0       2024-08-01 2024-08-01 10:20:30 B'000102f4
+1   4   2024-08-01 2024-08-01 10:20:30 B'000102f4
+2   5   2024-08-01 2024-08-01 10:20:30 B'000102f4
+... ... ...        ...                 ...       
+2   26  2024-08-01 2024-08-01 10:20:30 B'000102f4
+0       2024-08-01 2024-08-01 10:20:30 B'000102f4
+1   28  2024-08-01 2024-08-01 10:20:30 B'000102f4
+2   29  2024-08-01 2024-08-01 10:20:30 B'000102f4
+0       2024-08-01 2024-08-01 10:20:30 B'000102f4
 `);
     });
   });
