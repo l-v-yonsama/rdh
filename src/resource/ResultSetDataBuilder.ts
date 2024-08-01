@@ -688,7 +688,11 @@ export class ResultSetDataBuilder {
                 colType = GC.NUMERIC;
               }
             } else if (vType === "string") {
-              colType = GC.TEXT;
+              if (/TRUE|FALSE/i.test(v)) {
+                colType = GC.BOOLEAN;
+              } else {
+                colType = GC.TEXT;
+              }
             } else {
               if (isDate(v)) {
                 colType = GC.DATE;
