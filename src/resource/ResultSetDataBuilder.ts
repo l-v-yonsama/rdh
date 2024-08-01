@@ -435,14 +435,20 @@ export class ResultSetDataBuilder {
       }
     }
     ret.resetKeyTypeByRows();
-    const notEmptyStringKeys = ret.rs.keys.filter(
+    ret.normalizeValuesByTypes();
+    return ret;
+  }
+
+  normalizeValuesByTypes(): void {
+    const { rs } = this;
+    const notEmptyStringKeys = rs.keys.filter(
       (it) =>
         isNumericLike(it.type) ||
         isBooleanLike(it.type) ||
         isDateTimeOrDateOrTime(it.type)
     );
     if (notEmptyStringKeys.length) {
-      ret.rs.rows.forEach((row) => {
+      rs.rows.forEach((row) => {
         notEmptyStringKeys.forEach((it) => {
           const v = row.values[it.name];
           if (v === "") {
@@ -455,7 +461,6 @@ export class ResultSetDataBuilder {
         });
       });
     }
-    return ret;
   }
 
   /**
