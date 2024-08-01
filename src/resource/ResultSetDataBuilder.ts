@@ -14,10 +14,12 @@ import {
   ToStringParam,
   isResultSetData,
 } from "../types";
-import isDate, { toBoolean, toDate } from "../utils";
+import isDate, { toDate } from "../utils";
 import {
   isBinaryLike,
+  isBooleanLike,
   isDateTimeOrDate,
+  isDateTimeOrDateOrTime,
   isNumericLike,
   isTextLike,
 } from "./GeneralColumnUtil";
@@ -172,17 +174,6 @@ export class RowHelper {
     }
   }
 
-  //   getAnnotationsOf(key: string, type: AnnotationType): CellAnnotation[] {
-  //   const r = new Array<CellAnnotation>();
-  //   if (this.meta && this.meta[key]) {
-  //     const annotations: CellAnnotation[] = this.meta[key];
-  //     if (annotations) {
-  //       annotations.filter((a) => a.type === type).forEach((a) => r.push(a));
-  //     }
-  //   }
-  //   return r;
-  // }
-
   static hasAnyAnnotation(row: RdhRow, types: AnnotationType[]): boolean {
     if (row.meta && types.length) {
       return (
@@ -248,8 +239,15 @@ export class ResultSetDataBuilder {
     const key = this.rs.keys.find((it) => it.name === keyName);
     if (key) {
       key.type = type;
+      key.align = "center";
+      if (isNumericLike(type)) {
+        key.align = "left";
+      } else if (isTextLike(type)) {
+        key.align = "left";
+      }
     }
   }
+
   updateKeyComment(keyName: string, comment: string): void {
     const key = this.rs.keys.find((it) => it.name === keyName);
     if (key) {
@@ -311,7 +309,7 @@ export class ResultSetDataBuilder {
   static from(
     list: any,
     options?: {
-      keyNames?: string[];
+      firstRowAsTitle?: boolean;
     }
   ): ResultSetDataBuilder {
     if (list === undefined || list === null || list === "") {
@@ -371,31 +369,33 @@ export class ResultSetDataBuilder {
     const t = typeof list;
     let ret: ResultSetDataBuilder;
     // console.log('outputToSpread, list=', list, t, list.constructor.name)
-    const strTitles: string[] = [];
 
-    if (options?.keyNames) {
-      strTitles.push(...options.keyNames);
-    }
     if (list instanceof Array) {
-      if (list.length > 0) {
-        let elm = list[0];
+      if (list.length === 0) {
+        throw new Error("No records");
+      }
+      const strTitles: string[] = [];
 
-        if (elm instanceof Array) {
-          // number[][]
+      let elm = list[0];
+      if (elm instanceof Array) {
+        if (options?.firstRowAsTitle) {
+          strTitles.push(...elm);
+        } else {
           let i = strTitles.length + 1;
           while (strTitles.length < elm.length) {
             strTitles.push(`K${i++}`);
           }
-          ret = new ResultSetDataBuilder(strTitles);
+        }
 
-          for (let r = 0; r < list.length; r++) {
-            elm = list[r];
-            const values: any = {};
-            for (let c = 0; c < elm.length; c++) {
-              values[strTitles[c]] = elm[c];
-            }
-            ret.addRow(values);
+        ret = new ResultSetDataBuilder(strTitles);
+
+        for (let r = options?.firstRowAsTitle ? 1 : 0; r < list.length; r++) {
+          elm = list[r];
+          const values: any = {};
+          for (let c = 0; c < elm.length; c++) {
+            values[strTitles[c]] = elm[c];
           }
+          ret.addRow(values);
         }
       }
     } else {
@@ -435,6 +435,22 @@ export class ResultSetDataBuilder {
       }
     }
     ret.resetKeyTypeByRows();
+    const notEmptyStringKeys = ret.rs.keys.filter(
+      (it) =>
+        isNumericLike(it.type) ||
+        isBooleanLike(it.type) ||
+        isDateTimeOrDateOrTime(it.type)
+    );
+    if (notEmptyStringKeys.length) {
+      ret.rs.rows.forEach((row) => {
+        notEmptyStringKeys.forEach((it) => {
+          const v = row.values[it.name];
+          if (v === "") {
+            row.values[it.name] = null;
+          }
+        });
+      });
+    }
     return ret;
   }
 
@@ -577,24 +593,6 @@ export class ResultSetDataBuilder {
     return retList;
   }
 
-  toMatrixArray(key_names?: string[]): Array<Array<any>> {
-    const retList = new Array<Array<any>>();
-    this.rs.rows.forEach((row: RdhRow) => {
-      const retRow = new Array<any>();
-      if (key_names && key_names.length > 0) {
-        key_names.forEach((key_name: any) => {
-          retRow.push((<any>row.values)[key_name]);
-        });
-      } else {
-        this.rs.keys.forEach((key: any) => {
-          retRow.push((<any>row.values)[key.name]);
-        });
-      }
-      retList.push(retRow);
-    });
-    return retList;
-  }
-
   toCsv(params?: ToStringParam): string {
     return toContentString(this.rs, "csv", params);
   }
@@ -665,54 +663,48 @@ export class ResultSetDataBuilder {
   }
 
   resetKeyTypeByRows(): void {
-    this.rs.keys.forEach((k) => {
-      const length = this.rs.rows.length;
-      const types = new Set<string>();
-      for (let i = 0; i < length; i++) {
-        const v = this.rs.rows[i].values[k.name];
-        if (v === "" || v === null) {
-          continue;
-        }
-
-        if (["TRUE", "FALSE", "True", "False", "true", "false"].includes(v)) {
-          types.add("boolean");
-        } else if (isDate(v)) {
-          types.add("date");
-        } else {
-          types.add(typeof v);
-        }
+    const fieldTypeMap = new Map<string, GC>();
+    const keys = this.keynames();
+    for (const row of this.rs.rows) {
+      if (keys.length === fieldTypeMap.size) {
+        break;
       }
-
-      if (types.size === 1) {
-        const emptyToNull = (): void => {
-          for (let i = 0; i < length; i++) {
-            if (this.rs.rows[i].values[k.name] === "") {
-              this.rs.rows[i].values[k.name] = null;
-            }
-          }
-        };
-
-        if (types.has("string")) {
-          k.type = GC.TEXT;
-        } else if (types.has("boolean")) {
-          k.type = GC.BOOLEAN;
-          for (let i = 0; i < length; i++) {
-            const v = this.rs.rows[i].values[k.name];
-            if (v === "") {
-              this.rs.rows[i].values[k.name] = null;
+      const { values } = row;
+      keys
+        .filter((f) => !fieldTypeMap.has(f))
+        .forEach((it) => {
+          const v = values[it];
+          if (v !== null && v !== undefined) {
+            const vType = typeof v;
+            let colType: GC = GC.UNKNOWN;
+            if (vType === "boolean") {
+              colType = GC.BOOLEAN;
+            } else if (vType === "bigint") {
+              colType = GC.BIGINT;
+            } else if (vType === "number") {
+              if (Number.isInteger(v)) {
+                colType = GC.INTEGER;
+              } else {
+                colType = GC.NUMERIC;
+              }
+            } else if (vType === "string") {
+              colType = GC.TEXT;
             } else {
-              this.rs.rows[i].values[k.name] = toBoolean(v);
+              if (isDate(v)) {
+                colType = GC.DATE;
+              } else if (Buffer.isBuffer(v)) {
+                colType = GC.BLOB;
+              }
+            }
+
+            if (colType !== GC.UNKNOWN) {
+              fieldTypeMap.set(it, colType);
             }
           }
-        } else if (types.has("number")) {
-          k.type = GC.NUMERIC;
-          k.align = "right";
-          emptyToNull();
-        } else if (types.has("date")) {
-          k.type = GC.DATE;
-          emptyToNull();
-        }
-      }
+        });
+    }
+    fieldTypeMap.forEach((v, k) => {
+      this.updateKeyType(k, v);
     });
   }
 

@@ -73,6 +73,23 @@ describe("ResultSetDataBuilder", () => {
       expect(Buffer.isBuffer(row.values.b1)).toBe(true);
       expect(row.values.b1).toEqual(Buffer.from([0, 1, 2, 244]));
     });
+    // it("empty string should be null", () => {
+    //   const CSV: any[][] = [
+    //     [
+    //       "sepal.length",
+    //       "sepal.width",
+    //       "petal.length",
+    //       "petal.width",
+    //       "variety",
+    //     ],
+    //     [, 3.5, 1.4, 0.2, "Setosa"],
+    //     [4.7, , 1.3, 0.2, "Setosa"],
+    //     [7, 3.2, 4.7, , "Versicolor"],
+    //   ];
+
+    //   const rdb = ResultSetDataBuilder.from(CSV, { firstRowAsTitle: true });
+    //   console.log(rdb.toMarkdown({ withType: true }));
+    // });
   });
 
   describe("toMarkdown", () => {
