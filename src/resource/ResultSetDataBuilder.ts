@@ -14,7 +14,7 @@ import {
   ToStringParam,
   isResultSetData,
 } from "../types";
-import isDate, { toDate } from "../utils";
+import isDate, { toBoolean, toDate } from "../utils";
 import {
   isBinaryLike,
   isBooleanLike,
@@ -447,6 +447,10 @@ export class ResultSetDataBuilder {
           const v = row.values[it.name];
           if (v === "") {
             row.values[it.name] = null;
+          } else {
+            if (isBooleanLike(it.type)) {
+              row.values[it.name] = toBoolean(v);
+            }
           }
         });
       });
