@@ -55,11 +55,25 @@ export const escapeHtml = (s: string): string => {
   return s.replace(/[&'`"<>]/g, function (match) {
     return {
       "&": "&amp;",
-      "'": "&#x27;",
+      "'": "&#39;",
       "`": "&#x60;",
       '"': "&quot;",
       "<": "&lt;",
       ">": "&gt;",
     }[match];
+  });
+};
+export const unescapeHtml = (s: string): string => {
+  const entityMap = {
+    "&amp;": "&",
+    "&lt;": "<",
+    "&gt;": ">",
+    "&quot;": '"',
+    "&#39;": "'",
+    "&#x60;": "`",
+  };
+
+  return s.replace(/&amp;|&lt;|&gt;|&quot;|&#39;|&#x60;/g, function (match) {
+    return entityMap[match];
   });
 };
