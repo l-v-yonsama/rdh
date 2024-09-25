@@ -293,17 +293,16 @@ export class ResultSetDataBuilder {
     });
   }
 
-  static createEmpty(): ResultSetData {
-    const rdh = new ResultSetDataBuilder([
-      {
-        name: "message",
-        comment: "",
-        type: GC.TEXT,
-        width: 200,
-      },
-    ]);
-    rdh.addRow({ message: "empty result set" });
-    return rdh.build();
+  static createEmpty(opt?: { message?: string }): ResultSetDataBuilder {
+    const { message } = opt ?? {};
+    const o: ResultSetData = {
+      created: new Date(),
+      keys: [],
+      rows: [],
+      meta: {},
+      message,
+    };
+    return this.from(o);
   }
 
   static from(
@@ -736,12 +735,14 @@ export class ResultSetDataBuilder {
     affectedRows,
     insertId,
     changedRows,
+    capacityUnits,
   }: {
     elapsedTimeMilli: number;
     selectedRows?: number;
     affectedRows?: number;
     insertId?: number;
     changedRows?: number;
+    capacityUnits?: number;
   }): void {
     const elapsedTime = (elapsedTimeMilli / 1000).toFixed(2);
 
@@ -755,6 +756,7 @@ export class ResultSetDataBuilder {
         insertId: insertId,
         affectedRows: affectedRows,
         changedRows: changedRows,
+        capacityUnits,
       };
     } else {
       // select
@@ -764,7 +766,11 @@ export class ResultSetDataBuilder {
         } in set (${elapsedTime} sec)`,
         elapsedTimeMilli,
         selectedRows,
+        capacityUnits,
       };
+    }
+    if (capacityUnits !== undefined) {
+      this.rs.summary.info += ` CU (${capacityUnits})`;
     }
   }
 }

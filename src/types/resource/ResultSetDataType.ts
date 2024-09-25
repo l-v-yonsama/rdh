@@ -86,6 +86,7 @@ export type RdhSummary = {
   affectedRows?: number;
   insertId?: number;
   changedRows?: number;
+  capacityUnits?: number;
 };
 
 export type ResultSetData = {
@@ -93,6 +94,7 @@ export type ResultSetData = {
   readonly keys: RdhKey[];
   readonly rows: RdhRow[];
   readonly meta: RdhMeta;
+  readonly message?: string;
   summary?: RdhSummary;
   queryConditions?: QueryConditions;
   sqlStatement?: string | undefined;
