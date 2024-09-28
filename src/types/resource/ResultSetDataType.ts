@@ -94,7 +94,7 @@ export type ResultSetData = {
   readonly keys: RdhKey[];
   readonly rows: RdhRow[];
   readonly meta: RdhMeta;
-  readonly message?: string;
+  readonly noRecordsReason?: string;
   summary?: RdhSummary;
   queryConditions?: QueryConditions;
   sqlStatement?: string | undefined;

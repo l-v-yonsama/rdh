@@ -78,6 +78,10 @@ abstract class BaseString {
       return this.noKeys();
     }
 
+    if (this.rdh.rows.length === 0) {
+      return this.noRecords();
+    }
+
     this.createHeaders();
     this.createPreBody();
 
@@ -106,6 +110,7 @@ abstract class BaseString {
   }
 
   abstract noKeys(): string;
+  abstract noRecords(): string;
 
   abstract createHeaders(): void;
   abstract createPreBody(): void;
@@ -213,6 +218,9 @@ class HtmlString extends BaseString {
 
   noKeys(): string {
     return "<p>No Keys.</p>";
+  }
+  noRecords(): string {
+    return `<p>${this.rdh.noRecordsReason ?? "No Records."}</p>`;
   }
   createHeaders(): void {
     const { rdhKeys } = this;
@@ -398,6 +406,10 @@ class MarkdownString extends BaseString {
   noKeys(): string {
     return "No Keys.";
   }
+  noRecords(): string {
+    return this.rdh.noRecordsReason ?? "No Records.";
+  }
+
   createHeaders(): void {
     const { rdhKeys, hasKeyComment } = this;
     const { withType, withComment, withRowNo } = this.params;
@@ -527,12 +539,16 @@ class CsvString extends BaseString {
   private readonly delimiter: string;
   constructor(rdh: ResultSetData, params: ToStringParam) {
     super(rdh, params);
-    this.delimiter = params.csv?.delimiter ?? ",";
+    this.delimiter = params?.csv?.delimiter ?? ",";
   }
 
   noKeys(): string {
     return "No Keys.";
   }
+  noRecords(): string {
+    return this.rdh.noRecordsReason ?? "No Records.";
+  }
+
   createHeaders(): void {
     const { rdhKeys, hasKeyComment, delimiter } = this;
     const { withType, withComment, withRowNo } = this.params;
@@ -652,6 +668,9 @@ class PlainString extends BaseString {
 
     if (rdhKeys.length < 0) {
       return "No Keys.";
+    }
+    if (this.rdh.rows.length === 0) {
+      return this.rdh.noRecordsReason ?? "No Records.";
     }
 
     const buf = listit.buffer();
@@ -790,6 +809,9 @@ class PlainString extends BaseString {
   }
 
   noKeys(): string {
+    throw new Error("Method not implemented.");
+  }
+  noRecords(): string {
     throw new Error("Method not implemented.");
   }
   createHeaders(): void {

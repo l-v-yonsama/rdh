@@ -293,14 +293,14 @@ export class ResultSetDataBuilder {
     });
   }
 
-  static createEmpty(opt?: { message?: string }): ResultSetDataBuilder {
-    const { message } = opt ?? {};
+  static createEmpty(opt?: { noRecordsReason?: string }): ResultSetDataBuilder {
+    const { noRecordsReason } = opt ?? {};
     const o: ResultSetData = {
       created: new Date(),
       keys: [],
       rows: [],
       meta: {},
-      message,
+      noRecordsReason,
     };
     return this.from(o);
   }
@@ -349,6 +349,7 @@ export class ResultSetDataBuilder {
         });
       }
       (rdb.rs as any)["created"] = toDate(plainObj.created);
+      (rdb.rs as any)["noRecordsReason"] = plainObj.noRecordsReason;
       rdb.rs.sqlStatement = plainObj.sqlStatement;
       rdb.rs.summary = plainObj.summary;
       rdb.rs.shuffledIndexes = plainObj.shuffledIndexes;

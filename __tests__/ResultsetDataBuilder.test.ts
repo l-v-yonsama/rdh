@@ -112,6 +112,15 @@ describe("ResultSetDataBuilder", () => {
 `
       );
     });
+
+    it("should be no records", () => {
+      const rdb = ResultSetDataBuilder.createEmpty({
+        noRecordsReason: "No records...",
+      });
+      expect(rdb.toMarkdown()).toBe("No records...");
+      const rdb2 = ResultSetDataBuilder.createEmpty();
+      expect(rdb2.toMarkdown()).toBe("No Records.");
+    });
   });
   describe("toPlainText", () => {
     it("should be success withCodeLabel", () => {
@@ -147,6 +156,14 @@ describe("ResultSetDataBuilder", () => {
 0       2024-08-01 2024-08-01 10:20:30 B'000102f4
 `);
     });
+    it("should be no records", () => {
+      const rdb = ResultSetDataBuilder.createEmpty({
+        noRecordsReason: "No records...",
+      });
+      expect(rdb.toString()).toBe("No records...");
+      const rdb2 = ResultSetDataBuilder.createEmpty();
+      expect(rdb2.toString()).toBe("No Records.");
+    });
   });
   describe("toCsv", () => {
     it("should be success withCodeLabel, delimiter:comma", () => {
@@ -181,6 +198,14 @@ describe("ResultSetDataBuilder", () => {
 "0 <green>"\t""\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"
 `);
     });
+    it("should be no records", () => {
+      const rdb = ResultSetDataBuilder.createEmpty({
+        noRecordsReason: "No records...",
+      });
+      expect(rdb.toCsv()).toBe("No records...");
+      const rdb2 = ResultSetDataBuilder.createEmpty();
+      expect(rdb2.toCsv()).toBe("No Records.");
+    });
   });
   describe("toHtml", () => {
     it("should be success withCodeLabel", () => {
@@ -206,6 +231,14 @@ describe("ResultSetDataBuilder", () => {
 </table>
 </div>
 `);
+    });
+    it("should be no records", () => {
+      const rdb = ResultSetDataBuilder.createEmpty({
+        noRecordsReason: "No records...",
+      });
+      expect(rdb.toHtml()).toBe("<p>No records...</p>");
+      const rdb2 = ResultSetDataBuilder.createEmpty();
+      expect(rdb2.toHtml()).toBe("<p>No Records.</p>");
     });
   });
 });

@@ -284,6 +284,7 @@ export function parseFaIconType(type: GC): string {
     case GC.PG_NDISTINCT:
     case GC.PG_DEPENDENCIES:
     case GC.UNIQUEIDENTIFIER:
+    case GC.NULL:
     case GC.UNKNOWN:
       return "fa-question-circle";
     // enum, set

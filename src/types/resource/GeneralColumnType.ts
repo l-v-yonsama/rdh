@@ -70,6 +70,8 @@ export const GeneralColumnType = {
   OBJECT: "object",
   VARIANT: "variant",
   UNIQUEIDENTIFIER: "uniqueidentifier",
+  // For dynamoDB
+  NULL: "NULL",
   UNKNOWN: "unknown",
 } as const;
 
