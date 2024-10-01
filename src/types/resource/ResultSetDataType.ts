@@ -7,6 +7,7 @@ import type { TableRule } from "./Rules";
 
 export type RdhMeta = {
   connectionName?: string;
+  useDatabase?: string;
   schemaName?: string;
   tableName?: string;
   comment?: string;
