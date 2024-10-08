@@ -73,9 +73,9 @@ export function isTextLike(type: GC): boolean {
 }
 
 /**
- * Tests whether type is BYTEA,BLOB,MEDIUMBLOB,LONGBLOB OR BINARY
+ * Tests whether type is BYTEA,BLOB,MEDIUMBLOB,LONGBLOB,BINARY_ARRAY OR BINARY
  * @param type GC
- * @returns true:BYTEA,BLOB,MEDIUMBLOB,LONGBLOB OR BINARY
+ * @returns true:BYTEA,BLOB,MEDIUMBLOB,LONGBLOB,BINARY_ARRAY OR BINARY
  */
 export function isBinaryLike(type: GC): boolean {
   switch (type) {
@@ -86,6 +86,7 @@ export function isBinaryLike(type: GC): boolean {
     case GC.TINYBLOB:
     case GC.BINARY:
     case GC.VARBINARY:
+    case GC.BINARY_ARRAY:
       return true;
   }
   return false;
@@ -185,7 +186,12 @@ export function isEnumOrSet(type: GC): boolean {
   return GC.ENUM === type || GC.SET === type;
 }
 export function isArray(type: GC): boolean {
-  return GC.ARRAY === type;
+  return (
+    GC.ARRAY === type ||
+    GC.STRING_ARRAY === type ||
+    GC.NUMERIC_ARRAY === type ||
+    GC.BINARY_ARRAY === type
+  );
 }
 
 export function parseFaIconType(type: GC): string {
@@ -252,6 +258,9 @@ export function parseFaIconType(type: GC): string {
       return "fa-chess-board";
     // array
     case GC.ARRAY:
+    case GC.STRING_ARRAY:
+    case GC.NUMERIC_ARRAY:
+    case GC.BINARY_ARRAY:
       return "fa-list";
     // object
     case GC.OBJECT:
