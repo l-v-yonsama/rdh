@@ -16,6 +16,7 @@ import {
   isBinaryLike,
   isDateTime,
   isDateTimeOrDate,
+  isEnumOrSet,
   isJsonLike,
 } from "./GeneralColumnUtil";
 import { RowHelper } from "./ResultSetDataBuilder";
@@ -124,6 +125,19 @@ abstract class BaseString {
     this.retList.push(s);
   }
 
+  toHexString = (v: any): string => {
+    if (v instanceof Buffer) {
+      return `B'${v.toString("hex", 0, Math.max(v.byteLength, 64))}`;
+    } else if (v instanceof Uint8Array) {
+      return `B'${Buffer.from(v).toString(
+        "hex",
+        0,
+        Math.max(v.byteLength, 64)
+      )}`;
+    }
+    return "(BINARY)";
+  };
+
   kvToString = (keyType: GeneralColumnType, v: any): string => {
     const { dateFormat, maxCellValueLength, binaryToHex } = this.params;
     let s = "" + v;
@@ -133,14 +147,34 @@ abstract class BaseString {
       } else {
         s = dayjs(v).format(dateFormat);
       }
+    } else if (keyType === GeneralColumnType.BINARY_SET) {
+      // DynamoDBのBS型をここで処理したいので、isEnumOrSetのケースよりも優先する
+      if (binaryToHex) {
+        try {
+          if (v && v instanceof Set) {
+            const first = v.values().next().value;
+            s = this.toHexString(first);
+          }
+          // eslint-disable-next-line no-empty
+        } catch (_) {}
+      } else {
+        s = "([BINARY, ...])";
+      }
     } else if (isBinaryLike(keyType)) {
       if (binaryToHex) {
-        if (v instanceof Buffer) {
-          s = `B'${v.toString("hex", 0, Math.max(v.byteLength, 64))}`;
-        }
+        s = this.toHexString(v);
       } else {
         s = "(BINARY)";
       }
+    } else if (isEnumOrSet(keyType)) {
+      try {
+        if (v) {
+          if (v instanceof Set) {
+            s = JSON.stringify([...v]);
+          }
+        }
+        // eslint-disable-next-line no-empty
+      } catch (_) {}
     } else if (isJsonLike(keyType)) {
       try {
         if (typeof v === "object" || Array.isArray(v)) {
@@ -474,6 +508,10 @@ class MarkdownString extends BaseString {
       const ruleMarker = withRuleViolation
         ? this.resolveRuleMarkers(row, key.name)
         : undefined;
+
+      if (key.name === "bs1") {
+        console.log("bs1", key);
+      }
       retRow.push(
         this.toMarkdownString(row.values[key.name], {
           keyType: key.type,

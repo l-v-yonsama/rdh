@@ -115,3 +115,18 @@ export const getUniqObjectKeys = (list: any[]): string[] => {
     });
   return [...keys];
 };
+
+/**
+ * 可変長引数を受け取り、Setを作成する関数
+ * @param elements - Setに追加する要素
+ * @returns 新しいSet
+ *
+ * @example
+ * // 数値のセットを作成する例
+ * // 引数を配列で指定する必要はない
+ * const numberSet = setOf(1, 2, 3);
+ * console.log(numberSet); // Set { 1, 2, 3 }
+ */
+export const setOf = <T>(...elements: T[]): Set<T> => {
+  return new Set(elements);
+};

@@ -1,6 +1,6 @@
 {
   "name": "@l-v-yonsama/rdh",
-  "version": "0.1.15",
+  "version": "0.2.3",
   "description": "Database resultset data holder in TypeScript.",
   "engines": {
     "node": ">= 18"

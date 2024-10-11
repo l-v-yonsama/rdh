@@ -40,4 +40,4 @@
 
 #### Defined in
 
-[resource/ResultSetDataBuilder.ts:217](https://github.com/l-v-yonsama/rdh/blob/d931879769183eeeebf9996f3fdcc50b4ceb15f3/src/resource/ResultSetDataBuilder.ts#L217)
+[resource/ResultSetDataBuilder.ts:219](https://github.com/l-v-yonsama/rdh/blob/32678ce09da5736897a25a089658d9be4f314d8e/src/resource/ResultSetDataBuilder.ts#L219)

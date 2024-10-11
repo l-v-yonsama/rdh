@@ -16,10 +16,12 @@ import {
 } from "../types";
 import isDate, { toBoolean, toDate } from "../utils";
 import {
+  isArray,
   isBinaryLike,
   isBooleanLike,
   isDateTimeOrDate,
   isDateTimeOrDateOrTime,
+  isEnumOrSet,
   isNumericLike,
   isTextLike,
 } from "./GeneralColumnUtil";
@@ -45,7 +47,7 @@ export function createRdhKey({
   if (align === undefined) {
     if (isNumericLike(type)) {
       align = "right";
-    } else if (isTextLike(type)) {
+    } else if (isTextLike(type) || isEnumOrSet(type) || isArray(type)) {
       align = "left";
     }
   }

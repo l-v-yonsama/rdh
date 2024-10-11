@@ -3,6 +3,7 @@ import {
   GeneralColumnType,
   resolveCodeLabel,
   ResultSetDataBuilder,
+  setOf,
 } from "../src";
 
 const createRdb = (): ResultSetDataBuilder => {
@@ -12,6 +13,8 @@ const createRdb = (): ResultSetDataBuilder => {
     createRdhKey({ name: "d1", type: GeneralColumnType.DATE }),
     createRdhKey({ name: "t1", type: GeneralColumnType.TIMESTAMP }),
     createRdhKey({ name: "b1", type: GeneralColumnType.BLOB }),
+    createRdhKey({ name: "ss1", type: GeneralColumnType.STRING_SET }),
+    createRdhKey({ name: "ns1", type: GeneralColumnType.NUMERIC_SET }),
   ]);
 
   for (let i = 1; i <= 30; i++) {
@@ -21,6 +24,8 @@ const createRdb = (): ResultSetDataBuilder => {
       d1: new Date("2024-08-01 00:00:00"),
       t1: new Date("2024-08-01 10:20:30"),
       b1: Buffer.from([0, 1, 2, 244]),
+      ss1: setOf("a" + i, "b" + i),
+      ns1: setOf(i, i + 1),
     });
   }
 
@@ -96,19 +101,19 @@ describe("ResultSetDataBuilder", () => {
   describe("toMarkdown", () => {
     it("should be success withCodeLabel", () => {
       expect(rdb.toMarkdown({ withCodeLabel: true })).toEqual(
-        `| n1 | s1 | d1 | t1 | b1 |
-| ---: | :--- | :---: | :---: | :---: |
-| 1 &lt;yellow&gt; | 1 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) |
-| 2 &lt;red&gt; | 2 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) |
-| 0 &lt;green&gt; | \`NULL\` | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) |
-| 1 &lt;yellow&gt; | 4 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) |
-| 2 &lt;red&gt; | 5 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) |
-| ... | ... | ... | ... | ... |
-| 2 &lt;red&gt; | 26 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) |
-| 0 &lt;green&gt; | \`NULL\` | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) |
-| 1 &lt;yellow&gt; | 28 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) |
-| 2 &lt;red&gt; | 29 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) |
-| 0 &lt;green&gt; | \`NULL\` | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) |
+        `| n1 | s1 | d1 | t1 | b1 | ss1 | ns1 |
+| ---: | :--- | :---: | :---: | :---: | :--- | :--- |
+| 1 &lt;yellow&gt; | 1 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) | ["a1","b1"] | [1,2] |
+| 2 &lt;red&gt; | 2 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) | ["a2","b2"] | [2,3] |
+| 0 &lt;green&gt; | \`NULL\` | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) | ["a3","b3"] | [3,4] |
+| 1 &lt;yellow&gt; | 4 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) | ["a4","b4"] | [4,5] |
+| 2 &lt;red&gt; | 5 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) | ["a5","b5"] | [5,6] |
+| ... | ... | ... | ... | ... | ... | ... |
+| 2 &lt;red&gt; | 26 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) | ["a26","b26"] | [26,27] |
+| 0 &lt;green&gt; | \`NULL\` | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) | ["a27","b27"] | [27,28] |
+| 1 &lt;yellow&gt; | 28 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) | ["a28","b28"] | [28,29] |
+| 2 &lt;red&gt; | 29 | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) | ["a29","b29"] | [29,30] |
+| 0 &lt;green&gt; | \`NULL\` | 2024-08-01 | 2024-08-01 10:20:30 | (BINARY) | ["a30","b30"] | [30,31] |
 `
       );
     });
@@ -125,35 +130,35 @@ describe("ResultSetDataBuilder", () => {
   describe("toPlainText", () => {
     it("should be success withCodeLabel", () => {
       expect(rdb.toString({ withCodeLabel: true }))
-        .toEqual(`n1         s1  d1         t1                  b1      
-1 <yellow> 1   2024-08-01 2024-08-01 10:20:30 (BINARY)
-2 <red>    2   2024-08-01 2024-08-01 10:20:30 (BINARY)
-0 <green>      2024-08-01 2024-08-01 10:20:30 (BINARY)
-1 <yellow> 4   2024-08-01 2024-08-01 10:20:30 (BINARY)
-2 <red>    5   2024-08-01 2024-08-01 10:20:30 (BINARY)
-...        ... ...        ...                 ...     
-2 <red>    26  2024-08-01 2024-08-01 10:20:30 (BINARY)
-0 <green>      2024-08-01 2024-08-01 10:20:30 (BINARY)
-1 <yellow> 28  2024-08-01 2024-08-01 10:20:30 (BINARY)
-2 <red>    29  2024-08-01 2024-08-01 10:20:30 (BINARY)
-0 <green>      2024-08-01 2024-08-01 10:20:30 (BINARY)
+        .toEqual(`n1         s1  d1         t1                  b1       ss1           ns1    
+1 <yellow> 1   2024-08-01 2024-08-01 10:20:30 (BINARY) ["a1","b1"]   [1,2]  
+2 <red>    2   2024-08-01 2024-08-01 10:20:30 (BINARY) ["a2","b2"]   [2,3]  
+0 <green>      2024-08-01 2024-08-01 10:20:30 (BINARY) ["a3","b3"]   [3,4]  
+1 <yellow> 4   2024-08-01 2024-08-01 10:20:30 (BINARY) ["a4","b4"]   [4,5]  
+2 <red>    5   2024-08-01 2024-08-01 10:20:30 (BINARY) ["a5","b5"]   [5,6]  
+...        ... ...        ...                 ...      ...           ...    
+2 <red>    26  2024-08-01 2024-08-01 10:20:30 (BINARY) ["a26","b26"] [26,27]
+0 <green>      2024-08-01 2024-08-01 10:20:30 (BINARY) ["a27","b27"] [27,28]
+1 <yellow> 28  2024-08-01 2024-08-01 10:20:30 (BINARY) ["a28","b28"] [28,29]
+2 <red>    29  2024-08-01 2024-08-01 10:20:30 (BINARY) ["a29","b29"] [29,30]
+0 <green>      2024-08-01 2024-08-01 10:20:30 (BINARY) ["a30","b30"] [30,31]
 `);
     });
 
     it("should be success binaryToHex", () => {
       expect(rdb.toString({ binaryToHex: true }))
-        .toEqual(`n1  s1  d1         t1                  b1        
-1   1   2024-08-01 2024-08-01 10:20:30 B'000102f4
-2   2   2024-08-01 2024-08-01 10:20:30 B'000102f4
-0       2024-08-01 2024-08-01 10:20:30 B'000102f4
-1   4   2024-08-01 2024-08-01 10:20:30 B'000102f4
-2   5   2024-08-01 2024-08-01 10:20:30 B'000102f4
-... ... ...        ...                 ...       
-2   26  2024-08-01 2024-08-01 10:20:30 B'000102f4
-0       2024-08-01 2024-08-01 10:20:30 B'000102f4
-1   28  2024-08-01 2024-08-01 10:20:30 B'000102f4
-2   29  2024-08-01 2024-08-01 10:20:30 B'000102f4
-0       2024-08-01 2024-08-01 10:20:30 B'000102f4
+        .toEqual(`n1  s1  d1         t1                  b1         ss1           ns1    
+1   1   2024-08-01 2024-08-01 10:20:30 B'000102f4 ["a1","b1"]   [1,2]  
+2   2   2024-08-01 2024-08-01 10:20:30 B'000102f4 ["a2","b2"]   [2,3]  
+0       2024-08-01 2024-08-01 10:20:30 B'000102f4 ["a3","b3"]   [3,4]  
+1   4   2024-08-01 2024-08-01 10:20:30 B'000102f4 ["a4","b4"]   [4,5]  
+2   5   2024-08-01 2024-08-01 10:20:30 B'000102f4 ["a5","b5"]   [5,6]  
+... ... ...        ...                 ...        ...           ...    
+2   26  2024-08-01 2024-08-01 10:20:30 B'000102f4 ["a26","b26"] [26,27]
+0       2024-08-01 2024-08-01 10:20:30 B'000102f4 ["a27","b27"] [27,28]
+1   28  2024-08-01 2024-08-01 10:20:30 B'000102f4 ["a28","b28"] [28,29]
+2   29  2024-08-01 2024-08-01 10:20:30 B'000102f4 ["a29","b29"] [29,30]
+0       2024-08-01 2024-08-01 10:20:30 B'000102f4 ["a30","b30"] [30,31]
 `);
     });
     it("should be no records", () => {
@@ -168,34 +173,34 @@ describe("ResultSetDataBuilder", () => {
   describe("toCsv", () => {
     it("should be success withCodeLabel, delimiter:comma", () => {
       expect(rdb.toCsv({ withCodeLabel: true }))
-        .toEqual(`"n1","s1","d1","t1","b1"
-"1 <yellow>","1","2024-08-01","2024-08-01 10:20:30","(BINARY)"
-"2 <red>","2","2024-08-01","2024-08-01 10:20:30","(BINARY)"
-"0 <green>","","2024-08-01","2024-08-01 10:20:30","(BINARY)"
-"1 <yellow>","4","2024-08-01","2024-08-01 10:20:30","(BINARY)"
-"2 <red>","5","2024-08-01","2024-08-01 10:20:30","(BINARY)"
-...,...,...,...,...
-"2 <red>","26","2024-08-01","2024-08-01 10:20:30","(BINARY)"
-"0 <green>","","2024-08-01","2024-08-01 10:20:30","(BINARY)"
-"1 <yellow>","28","2024-08-01","2024-08-01 10:20:30","(BINARY)"
-"2 <red>","29","2024-08-01","2024-08-01 10:20:30","(BINARY)"
-"0 <green>","","2024-08-01","2024-08-01 10:20:30","(BINARY)"
+        .toEqual(`"n1","s1","d1","t1","b1","ss1","ns1"
+"1 <yellow>","1","2024-08-01","2024-08-01 10:20:30","(BINARY)","[""a1"",""b1""]","[1,2]"
+"2 <red>","2","2024-08-01","2024-08-01 10:20:30","(BINARY)","[""a2"",""b2""]","[2,3]"
+"0 <green>","","2024-08-01","2024-08-01 10:20:30","(BINARY)","[""a3"",""b3""]","[3,4]"
+"1 <yellow>","4","2024-08-01","2024-08-01 10:20:30","(BINARY)","[""a4"",""b4""]","[4,5]"
+"2 <red>","5","2024-08-01","2024-08-01 10:20:30","(BINARY)","[""a5"",""b5""]","[5,6]"
+...,...,...,...,...,...,...
+"2 <red>","26","2024-08-01","2024-08-01 10:20:30","(BINARY)","[""a26"",""b26""]","[26,27]"
+"0 <green>","","2024-08-01","2024-08-01 10:20:30","(BINARY)","[""a27"",""b27""]","[27,28]"
+"1 <yellow>","28","2024-08-01","2024-08-01 10:20:30","(BINARY)","[""a28"",""b28""]","[28,29]"
+"2 <red>","29","2024-08-01","2024-08-01 10:20:30","(BINARY)","[""a29"",""b29""]","[29,30]"
+"0 <green>","","2024-08-01","2024-08-01 10:20:30","(BINARY)","[""a30"",""b30""]","[30,31]"
 `);
     });
     it("should be success withCodeLabel, delimiter:tab", () => {
       expect(rdb.toCsv({ withCodeLabel: true, csv: { delimiter: "\t" } }))
-        .toEqual(`"n1"\t"s1"\t"d1"\t"t1"\t"b1"
-"1 <yellow>"\t"1"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"
-"2 <red>"\t"2"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"
-"0 <green>"\t""\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"
-"1 <yellow>"\t"4"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"
-"2 <red>"\t"5"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"
-...\t...\t...\t...\t...
-"2 <red>"\t"26"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"
-"0 <green>"\t""\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"
-"1 <yellow>"\t"28"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"
-"2 <red>"\t"29"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"
-"0 <green>"\t""\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"
+        .toEqual(`"n1"\t"s1"\t"d1"\t"t1"\t"b1"\t"ss1"\t"ns1"
+"1 <yellow>"\t"1"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"\t"[""a1"",""b1""]"\t"[1,2]"
+"2 <red>"\t"2"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"\t"[""a2"",""b2""]"\t"[2,3]"
+"0 <green>"\t""\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"\t"[""a3"",""b3""]"\t"[3,4]"
+"1 <yellow>"\t"4"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"\t"[""a4"",""b4""]"\t"[4,5]"
+"2 <red>"\t"5"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"\t"[""a5"",""b5""]"\t"[5,6]"
+...\t...\t...\t...\t...\t...\t...
+"2 <red>"\t"26"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"\t"[""a26"",""b26""]"\t"[26,27]"
+"0 <green>"\t""\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"\t"[""a27"",""b27""]"\t"[27,28]"
+"1 <yellow>"\t"28"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"\t"[""a28"",""b28""]"\t"[28,29]"
+"2 <red>"\t"29"\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"\t"[""a29"",""b29""]"\t"[29,30]"
+"0 <green>"\t""\t"2024-08-01"\t"2024-08-01 10:20:30"\t"(BINARY)"\t"[""a30"",""b30""]"\t"[30,31]"
 `);
     });
     it("should be no records", () => {
@@ -213,20 +218,20 @@ describe("ResultSetDataBuilder", () => {
         .toEqual(`<div class="table-container">
 <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
 <thead>
-  <tr class=""><th>n1</th><th>s1</th><th>d1</th><th>t1</th><th>b1</th></tr>
+  <tr class=""><th>n1</th><th>s1</th><th>d1</th><th>t1</th><th>b1</th><th>ss1</th><th>ns1</th></tr>
 </thead>
 <tbody>
-  <tr class=""><td class="">1 <span class="tag is-info is-light">yellow</span></td><td class="">1</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td></tr>
-  <tr class=""><td class="">2 <span class="tag is-info is-light">red</span></td><td class="">2</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td></tr>
-  <tr class=""><td class="">0 <span class="tag is-info is-light">green</span></td><td class=""><span class="tag is-light">NULL</span></td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td></tr>
-  <tr class=""><td class="">1 <span class="tag is-info is-light">yellow</span></td><td class="">4</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td></tr>
-  <tr class=""><td class="">2 <span class="tag is-info is-light">red</span></td><td class="">5</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td></tr>
-  <tr class=""><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
-  <tr class=""><td class="">2 <span class="tag is-info is-light">red</span></td><td class="">26</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td></tr>
-  <tr class=""><td class="">0 <span class="tag is-info is-light">green</span></td><td class=""><span class="tag is-light">NULL</span></td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td></tr>
-  <tr class=""><td class="">1 <span class="tag is-info is-light">yellow</span></td><td class="">28</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td></tr>
-  <tr class=""><td class="">2 <span class="tag is-info is-light">red</span></td><td class="">29</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td></tr>
-  <tr class=""><td class="">0 <span class="tag is-info is-light">green</span></td><td class=""><span class="tag is-light">NULL</span></td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td></tr>
+  <tr class=""><td class="">1 <span class="tag is-info is-light">yellow</span></td><td class="">1</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td><td class="">[&quot;a1&quot;,&quot;b1&quot;]</td><td class="">[1,2]</td></tr>
+  <tr class=""><td class="">2 <span class="tag is-info is-light">red</span></td><td class="">2</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td><td class="">[&quot;a2&quot;,&quot;b2&quot;]</td><td class="">[2,3]</td></tr>
+  <tr class=""><td class="">0 <span class="tag is-info is-light">green</span></td><td class=""><span class="tag is-light">NULL</span></td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td><td class="">[&quot;a3&quot;,&quot;b3&quot;]</td><td class="">[3,4]</td></tr>
+  <tr class=""><td class="">1 <span class="tag is-info is-light">yellow</span></td><td class="">4</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td><td class="">[&quot;a4&quot;,&quot;b4&quot;]</td><td class="">[4,5]</td></tr>
+  <tr class=""><td class="">2 <span class="tag is-info is-light">red</span></td><td class="">5</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td><td class="">[&quot;a5&quot;,&quot;b5&quot;]</td><td class="">[5,6]</td></tr>
+  <tr class=""><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+  <tr class=""><td class="">2 <span class="tag is-info is-light">red</span></td><td class="">26</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td><td class="">[&quot;a26&quot;,&quot;b26&quot;]</td><td class="">[26,27]</td></tr>
+  <tr class=""><td class="">0 <span class="tag is-info is-light">green</span></td><td class=""><span class="tag is-light">NULL</span></td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td><td class="">[&quot;a27&quot;,&quot;b27&quot;]</td><td class="">[27,28]</td></tr>
+  <tr class=""><td class="">1 <span class="tag is-info is-light">yellow</span></td><td class="">28</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td><td class="">[&quot;a28&quot;,&quot;b28&quot;]</td><td class="">[28,29]</td></tr>
+  <tr class=""><td class="">2 <span class="tag is-info is-light">red</span></td><td class="">29</td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td><td class="">[&quot;a29&quot;,&quot;b29&quot;]</td><td class="">[29,30]</td></tr>
+  <tr class=""><td class="">0 <span class="tag is-info is-light">green</span></td><td class=""><span class="tag is-light">NULL</span></td><td class="">2024-08-01</td><td class="">2024-08-01 10:20:30</td><td class="">(BINARY)</td><td class="">[&quot;a30&quot;,&quot;b30&quot;]</td><td class="">[30,31]</td></tr>
 </tbody>
 </table>
 </div>
