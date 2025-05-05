@@ -139,11 +139,16 @@ abstract class BaseString {
   };
 
   kvToString = (keyType: GeneralColumnType, v: any): string => {
-    const { dateFormat, maxCellValueLength, binaryToHex } = this.params;
+    const { dateFormat, timestampFormat, maxCellValueLength, binaryToHex } =
+      this.params;
     let s = "" + v;
     if (isDateTimeOrDate(keyType)) {
       if (isDateTime(keyType)) {
-        s = dayjs(v).format("YYYY-MM-DD HH:mm:ss");
+        if (timestampFormat) {
+          s = dayjs(v).format(timestampFormat);
+        } else {
+          s = dayjs(v).format("YYYY-MM-DD HH:mm:ss");
+        }
       } else {
         s = dayjs(v).format(dateFormat);
       }

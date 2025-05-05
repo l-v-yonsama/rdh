@@ -33,6 +33,11 @@ export type ToStringParam = {
   withRuleViolation?: boolean;
   keyNames?: string[];
   dateFormat?: "YYYY-MM-DD" | "YYYY-MM-DD HH:mm:ss";
+  timestampFormat?:
+    | "YYYY-MM-DD"
+    | "YYYY-MM-DD HH:mm:ss"
+    | "YYYY-MM-DD HH:mm:ss.SSS"
+    | "YYYY-MM-DDTHH:mm:ss.SSSZ";
   eol?: "\n" | "\r" | "\r\n";
   binaryToHex?: boolean;
   csv?: {
