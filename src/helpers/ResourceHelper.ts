@@ -121,6 +121,132 @@ export const diff = (rdh1: ResultSetData, rdh2: ResultSetData): DiffResult => {
   return result;
 };
 
+export const asyncDiff = async (
+  rdh1: ResultSetData,
+  rdh2: ResultSetData,
+  cancelToken?: { isCancelled: boolean }
+): Promise<DiffResult> => {
+  const result: DiffResult = {
+    ok: false,
+    deleted: 0,
+    inserted: 0,
+    updated: 0,
+    message: "",
+  };
+  if (!rdh1.meta?.compareKeys || rdh1.meta?.compareKeys.length === 0) {
+    result.message = "Missing compare key (Primary or uniq key).";
+    return result;
+  }
+  const rdb1 = ResultSetDataBuilder.from(rdh1);
+  const rdb2 = ResultSetDataBuilder.from(rdh2);
+
+  const keynames = rdb1.keynames();
+  const compareKey = getAvailableCompareKey(keynames, rdh1.meta?.compareKeys);
+  if (!compareKey) {
+    result.message = "Missing available compare key (Primary or uniq key).";
+    return result;
+  }
+
+  const notSupportedCompareKeys = rdb1.rs.keys
+    .filter((it) => compareKey.names.includes(it.name))
+    .filter((it) => isNotSupportDiffType(it.type));
+  if (notSupportedCompareKeys.length) {
+    const keys = notSupportedCompareKeys
+      .map((it) => `${it.name}: ${displayGeneralColumnType(it.type)}`)
+      .join(",");
+    result.message = `Not supported compare keys (${keys}).`;
+    return result;
+  }
+
+  const supportedKeyNames = rdb1.rs.keys
+    .filter((it) => !isNotSupportDiffType(it.type))
+    .map((it) => it.name);
+
+  const hasAlreadyChecked = new Set<string>();
+
+  RdhHelper.clearAllAnotations(rdb1.rs);
+  RdhHelper.clearAllAnotations(rdb2.rs);
+
+  for (let i = 0; i < rdh1.rows.length; i++) {
+    if (cancelToken?.isCancelled) {
+      result.message = `Cancelled.`;
+      return result;
+    }
+    const row1 = rdh1.rows[i];
+    const key1 = createCompareKeysValue(compareKey, row1);
+    hasAlreadyChecked.add(key1);
+    let removed = true;
+    for (const row2 of rdh2.rows) {
+      const key2 = createCompareKeysValue(compareKey, row2);
+      if (key1 === key2) {
+        removed = false;
+        // Update
+        let updated = false;
+        supportedKeyNames.forEach((name) => {
+          const v1 = row1.values[name];
+          const v2 = row2.values[name];
+          if (!equals(v1, v2)) {
+            updated = true;
+            RowHelper.pushAnnotation(row1, name, {
+              type: "Upd",
+              values: {
+                otherValue: row2.values[name],
+              },
+            });
+            RowHelper.pushAnnotation(row2, name, {
+              type: "Upd",
+              values: {
+                otherValue: row1.values[name],
+              },
+            });
+          }
+        });
+        if (updated) {
+          result.updated++;
+        }
+        break;
+      }
+    }
+    if (removed) {
+      if (supportedKeyNames.length) {
+        supportedKeyNames.forEach((name) => {
+          RowHelper.pushAnnotation(row1, name, { type: "Del" });
+        });
+        result.deleted++;
+      }
+    }
+    if (i % 1000 === 0) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+  }
+
+  for (let i = 0; i < rdh2.rows.length; i++) {
+    if (cancelToken?.isCancelled) {
+      result.message = `Cancelled.`;
+      return result;
+    }
+    const row2 = rdh2.rows[i];
+    const key2 = createCompareKeysValue(compareKey, row2);
+    if (!hasAlreadyChecked.has(key2)) {
+      keynames.forEach((name) => {
+        RowHelper.pushAnnotation(row2, name, { type: "Add" });
+      });
+      result.inserted++;
+    }
+    if (i % 1000 === 0) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+  }
+  result.ok = true;
+  if (result.inserted === 0 && result.deleted === 0 && result.updated === 0) {
+    result.message = "No changes";
+  } else {
+    result.message = `Inserted:${result.inserted}, Deleted:${result.deleted}, Updated:${result.updated}`;
+  }
+
+  return result;
+};
+
 export const diffToUndoChanges = (
   rdh1: ResultSetData,
   rdh2: ResultSetData
