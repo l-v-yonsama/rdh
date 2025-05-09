@@ -124,7 +124,7 @@ export const diff = (rdh1: ResultSetData, rdh2: ResultSetData): DiffResult => {
 export const asyncDiff = async (
   rdh1: ResultSetData,
   rdh2: ResultSetData,
-  cancelToken?: { isCancelled: boolean }
+  cancelToken?: { isCancellationRequested: boolean }
 ): Promise<DiffResult> => {
   const result: DiffResult = {
     ok: false,
@@ -168,7 +168,7 @@ export const asyncDiff = async (
   RdhHelper.clearAllAnotations(rdb2.rs);
 
   for (let i = 0; i < rdh1.rows.length; i++) {
-    if (cancelToken?.isCancelled) {
+    if (cancelToken?.isCancellationRequested) {
       result.message = `Cancelled.`;
       return result;
     }
@@ -221,7 +221,7 @@ export const asyncDiff = async (
   }
 
   for (let i = 0; i < rdh2.rows.length; i++) {
-    if (cancelToken?.isCancelled) {
+    if (cancelToken?.isCancellationRequested) {
       result.message = `Cancelled.`;
       return result;
     }
