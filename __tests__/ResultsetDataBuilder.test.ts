@@ -1,5 +1,6 @@
 import {
   createRdhKey,
+  createRdhKeysOf,
   GeneralColumnType,
   resolveCodeLabel,
   ResultSetDataBuilder,
@@ -244,6 +245,86 @@ describe("ResultSetDataBuilder", () => {
       expect(rdb.toHtml()).toBe("<p>No records...</p>");
       const rdb2 = ResultSetDataBuilder.createEmpty();
       expect(rdb2.toHtml()).toBe("<p>No Records.</p>");
+    });
+  });
+
+  describe("createRdhKeysOf", () => {
+    it("should return an empty array for an empty input", () => {
+      expect(createRdhKeysOf([])).toEqual([]);
+    });
+
+    it("should generate key info from a simple object array", () => {
+      const list = [
+        { id: 1, name: "foo", flag: true },
+        { id: 2, name: "bar", flag: false },
+      ];
+      const keys = createRdhKeysOf(list);
+      // Check key names
+      expect(keys.map((k) => k.name)).toEqual(["id", "name", "flag"]);
+      // Check types
+      expect(keys.find((k) => k.name === "id")?.type).toBe(
+        GeneralColumnType.NUMERIC
+      );
+      expect(keys.find((k) => k.name === "name")?.type).toBe(
+        GeneralColumnType.TEXT
+      );
+      expect(keys.find((k) => k.name === "flag")?.type).toBe(
+        GeneralColumnType.BOOLEAN
+      );
+    });
+
+    it("should return UNKNOWN type if types are mixed", () => {
+      const list = [{ value: 1 }, { value: "str" }];
+      const keys = createRdhKeysOf(list);
+      // Mixed types should result in UNKNOWN
+      expect(keys[0].type).toBe(GeneralColumnType.UNKNOWN);
+    });
+
+    it("should infer type if null or undefined is mixed with a value", () => {
+      const list = [{ value: null }, { value: 123 }, { value: undefined }];
+      const keys = createRdhKeysOf(list);
+      // Should infer NUMERIC
+      expect(keys[0].type).toBe(GeneralColumnType.NUMERIC);
+    });
+
+    it("should return NULL type if all values are null or undefined", () => {
+      const list = [{ value: null }, { value: undefined }];
+      const keys = createRdhKeysOf(list);
+      // All null/undefined should result in NULL type
+      expect(keys[0].type).toBe(GeneralColumnType.NULL);
+    });
+
+    it("should detect DATE type", () => {
+      const list = [
+        { dt: new Date("2020-01-01") },
+        { dt: new Date("2020-01-02") },
+      ];
+      const keys = createRdhKeysOf(list);
+      // Should detect DATE type
+      expect(keys[0].type).toBe(GeneralColumnType.DATE);
+    });
+
+    it("should infer types for multiple keys", () => {
+      const list = [
+        { a: 1, b: "x", c: true },
+        { a: null, c: false },
+        { a: 2, b: "y", c: false, dt: new Date("2020-01-02") },
+      ];
+      const keys = createRdhKeysOf(list);
+      // Check key names and types
+      expect(keys.map((k) => k.name)).toEqual(["a", "b", "c", "dt"]);
+      expect(keys.find((k) => k.name === "a")?.type).toBe(
+        GeneralColumnType.NUMERIC
+      );
+      expect(keys.find((k) => k.name === "b")?.type).toBe(
+        GeneralColumnType.TEXT
+      );
+      expect(keys.find((k) => k.name === "c")?.type).toBe(
+        GeneralColumnType.BOOLEAN
+      );
+      expect(keys.find((k) => k.name === "dt")?.type).toBe(
+        GeneralColumnType.DATE
+      );
     });
   });
 });

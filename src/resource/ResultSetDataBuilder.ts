@@ -14,7 +14,7 @@ import {
   ToStringParam,
   isResultSetData,
 } from "../types";
-import isDate, { toBoolean, toDate } from "../utils";
+import isDate, { getUniqObjectKeys, toBoolean, toDate } from "../utils";
 import {
   isArray,
   isBinaryLike,
@@ -63,6 +63,58 @@ export function createRdhKey({
   };
 
   return key;
+}
+
+export function createRdhKeysOf(list: any[]): RdhKey[] {
+  if (list.length === 0) return [];
+
+  // 推論用: 値からGeneralColumnTypeを返す
+  const inferType = (value: any): GC | undefined => {
+    if (value === null) return GC.NULL;
+    if (value === undefined) return undefined;
+    if (typeof value === "bigint") return GC.BIGINT;
+    if (typeof value === "boolean") return GC.BOOLEAN;
+    if (typeof value === "number") return GC.NUMERIC;
+    if (typeof value === "string") return GC.TEXT;
+    if (typeof value === "object") {
+      if (isDate(value)) return GC.DATE;
+      return GC.JSON;
+    }
+    return GC.UNKNOWN;
+  };
+
+  const fieldNames = getUniqObjectKeys(list);
+
+  return fieldNames.map((name) => {
+    let detectedType = inferType(list[0][name]);
+
+    for (let i = 1; i < list.length; i++) {
+      const currentType = inferType(list[i][name]);
+
+      if (currentType === undefined) {
+        // 無視して前の型を維持
+        continue;
+      }
+      if (currentType === GC.NULL) {
+        // nullは型推論に影響しない
+        if (detectedType === undefined) {
+          detectedType = currentType;
+        }
+        continue;
+      }
+      if (detectedType === undefined || detectedType === GC.NULL) {
+        detectedType = currentType;
+        continue;
+      }
+      if (detectedType !== currentType) {
+        // 型が混在している場合はUNKNOWNにする
+        detectedType = GC.UNKNOWN;
+        break;
+      }
+    }
+
+    return createRdhKey({ name, type: detectedType });
+  });
 }
 
 export function isResultSetDataBuilder(
