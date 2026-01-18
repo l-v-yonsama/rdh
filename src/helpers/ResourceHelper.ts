@@ -117,7 +117,7 @@ export const diff = (rdh1: ResultSetData, rdh2: ResultSetData): DiffResult => {
   if (result.inserted === 0 && result.deleted === 0 && result.updated === 0) {
     result.message = "No changes";
   } else {
-    result.message = `Inserted:${result.inserted}, Deleted:${result.deleted}, Updated:${result.updated} (${result.updatedColumns} columns)`;
+    result.message = `Inserted:${result.inserted}, Deleted:${result.deleted}, Updated:${result.updated} (${result.updatedColumns} column${result.updatedColumns === 1 ? "" : "s"})`;
   }
 
   return result;
@@ -245,7 +245,7 @@ export const asyncDiff = async (
   if (result.inserted === 0 && result.deleted === 0 && result.updated === 0) {
     result.message = "No changes";
   } else {
-    result.message = `Inserted:${result.inserted}, Deleted:${result.deleted}, Updated:${result.updated} (${result.updatedColumns} columns)`;
+    result.message = `Inserted:${result.inserted}, Deleted:${result.deleted}, Updated:${result.updated} (${result.updatedColumns} column${result.updatedColumns === 1 ? "" : "s"})`;
   }
 
   return result;
