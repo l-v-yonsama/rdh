@@ -21,6 +21,7 @@ export const diff = (rdh1: ResultSetData, rdh2: ResultSetData): DiffResult => {
     deleted: 0,
     inserted: 0,
     updated: 0,
+    updatedColumns: 0,
     message: "",
   };
   if (!rdh1.meta?.compareKeys || rdh1.meta?.compareKeys.length === 0) {
@@ -71,6 +72,7 @@ export const diff = (rdh1: ResultSetData, rdh2: ResultSetData): DiffResult => {
           const v1 = row1.values[name];
           const v2 = row2.values[name];
           if (!equals(v1, v2)) {
+            result.updatedColumns++;
             updated = true;
             RowHelper.pushAnnotation(row1, name, {
               type: "Upd",
@@ -115,7 +117,7 @@ export const diff = (rdh1: ResultSetData, rdh2: ResultSetData): DiffResult => {
   if (result.inserted === 0 && result.deleted === 0 && result.updated === 0) {
     result.message = "No changes";
   } else {
-    result.message = `Inserted:${result.inserted}, Deleted:${result.deleted}, Updated:${result.updated}`;
+    result.message = `Inserted:${result.inserted}, Deleted:${result.deleted}, Updated:${result.updated} (${result.updatedColumns} columns)`;
   }
 
   return result;
@@ -131,6 +133,7 @@ export const asyncDiff = async (
     deleted: 0,
     inserted: 0,
     updated: 0,
+    updatedColumns: 0,
     message: "",
   };
   if (!rdh1.meta?.compareKeys || rdh1.meta?.compareKeys.length === 0) {
@@ -186,6 +189,7 @@ export const asyncDiff = async (
           const v1 = row1.values[name];
           const v2 = row2.values[name];
           if (!equals(v1, v2)) {
+            result.updatedColumns++;
             updated = true;
             RowHelper.pushAnnotation(row1, name, {
               type: "Upd",
@@ -241,7 +245,7 @@ export const asyncDiff = async (
   if (result.inserted === 0 && result.deleted === 0 && result.updated === 0) {
     result.message = "No changes";
   } else {
-    result.message = `Inserted:${result.inserted}, Deleted:${result.deleted}, Updated:${result.updated}`;
+    result.message = `Inserted:${result.inserted}, Deleted:${result.deleted}, Updated:${result.updated} (${result.updatedColumns} columns)`;
   }
 
   return result;

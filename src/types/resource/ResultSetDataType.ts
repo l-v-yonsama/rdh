@@ -115,6 +115,7 @@ export type DiffResult = {
   deleted: number;
   inserted: number;
   updated: number;
+  updatedColumns: number;
 };
 
 export type DiffToUndoChangesResult = {
