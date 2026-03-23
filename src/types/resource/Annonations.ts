@@ -43,6 +43,8 @@ export type UpdateAnnotation = BaseCellAnnotation<
   }
 >;
 
+export type ErrorAnnotation = BaseCellAnnotation<"Err">;
+
 export type RuleAnnotation = BaseCellAnnotation<
   "Rul",
   {
