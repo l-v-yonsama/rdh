@@ -20,6 +20,7 @@ export type CellAnnotation =
   | DeleteAnnotation
   | AddAnnotation
   | UpdateAnnotation
+  | ErrorAnnotation
   | RuleAnnotation
   | LintAnnotation
   | StyleAnnotation
