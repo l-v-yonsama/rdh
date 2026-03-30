@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { default as listit } from "list-it";
 import {
   CodeResolvedAnnotation,
+  ErrorAnnotation,
   GeneralColumnType,
   RdhKey,
   RdhRow,
@@ -351,17 +352,25 @@ class HtmlString extends BaseString {
         ? this.resolveRuleMarkers(row, key.name)
         : undefined;
 
-      let cellUpdatedAnno = undefined;
+      let clazz = "";
       if (updated) {
-        cellUpdatedAnno = RowHelper.getFirstAnnotationOf<UpdateAnnotation>(
-          row,
-          key.name,
-          "Upd"
-        );
+        const cellUpdatedAnno =
+          RowHelper.getFirstAnnotationOf<UpdateAnnotation>(
+            row,
+            key.name,
+            "Upd"
+          );
+        if (cellUpdatedAnno) {
+          clazz = "is-info is-light";
+        }
+      } else if (
+        RowHelper.getFirstAnnotationOf<ErrorAnnotation>(row, key.name, "Err")
+      ) {
+        clazz = "is-danger is-light";
       }
 
       retRow.push({
-        clazz: cellUpdatedAnno ? "is-info is-light" : "",
+        clazz,
         s: this.toHtmlString(row.values[key.name], {
           keyType: key.type,
           label,
