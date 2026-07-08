@@ -1,4 +1,5 @@
 import { GeneralColumnType as GC } from "../types";
+import { debugLog } from "../utils";
 
 export function displayGeneralColumnType(columnType: GC): string {
   return columnType.toUpperCase();
@@ -32,7 +33,7 @@ export function parseColumnType(s: string | null | undefined): GC {
     return m;
   }
 
-  console.log("L35 unknown", s);
+  debugLog("[parseColumnType] unknown column type:", s);
 
   return GC.UNKNOWN;
 }

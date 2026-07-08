@@ -1,4 +1,5 @@
 export * from "./base";
+export * from "./debug";
 export * from "./strings";
 
 export default function isDate(value: unknown): value is Date {

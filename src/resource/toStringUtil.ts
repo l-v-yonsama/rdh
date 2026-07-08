@@ -319,7 +319,7 @@ class HtmlString extends BaseString {
         );
       });
       this.append("</ul>");
-      this.append("</deiv>");
+      this.append("</div>");
       this.append("</blockquote>");
     }
   }
@@ -523,9 +523,6 @@ class MarkdownString extends BaseString {
         ? this.resolveRuleMarkers(row, key.name)
         : undefined;
 
-      if (key.name === "bs1") {
-        console.log("bs1", key);
-      }
       retRow.push(
         this.toMarkdownString(row.values[key.name], {
           keyType: key.type,
