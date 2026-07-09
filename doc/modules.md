@@ -64,6 +64,7 @@
 - [containsIgnoreCase](modules.md#containsignorecase)
 - [createRdhKey](modules.md#createrdhkey)
 - [createRdhKeysOf](modules.md#createrdhkeysof)
+- [debugLog](modules.md#debuglog)
 - [diff](modules.md#diff)
 - [diffToUndoChanges](modules.md#difftoundochanges)
 - [displayGeneralColumnType](modules.md#displaygeneralcolumntype)
@@ -90,6 +91,7 @@
 - [parseColumnType](modules.md#parsecolumntype)
 - [parseFaIconType](modules.md#parsefaicontype)
 - [resolveCodeLabel](modules.md#resolvecodelabel)
+- [setDebugEnabled](modules.md#setdebugenabled)
 - [setOf](modules.md#setof)
 - [sleep](modules.md#sleep)
 - [toBoolean](modules.md#toboolean)
@@ -107,7 +109,7 @@
 
 #### Defined in
 
-[types/resource/Annonations.ts:38](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L38)
+[types/resource/Annonations.ts:38](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L38)
 
 ___
 
@@ -117,7 +119,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:16](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L16)
+[types/resource/Annonations.ts:16](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L16)
 
 ___
 
@@ -138,7 +140,7 @@ ___
 
 #### Defined in
 
-[types/resource/CodeResolverTypes.ts:8](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/CodeResolverTypes.ts#L8)
+[types/resource/CodeResolverTypes.ts:8](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/CodeResolverTypes.ts#L8)
 
 ___
 
@@ -162,7 +164,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:31](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L31)
+[types/resource/Annonations.ts:31](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L31)
 
 ___
 
@@ -172,7 +174,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:19](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L19)
+[types/resource/Annonations.ts:19](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L19)
 
 ___
 
@@ -182,7 +184,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:97](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L97)
+[types/resource/Annonations.ts:97](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L97)
 
 ___
 
@@ -201,7 +203,7 @@ ___
 
 #### Defined in
 
-[types/resource/CodeResolverTypes.ts:1](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/CodeResolverTypes.ts#L1)
+[types/resource/CodeResolverTypes.ts:1](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/CodeResolverTypes.ts#L1)
 
 ___
 
@@ -218,7 +220,7 @@ ___
 
 #### Defined in
 
-[types/resource/CodeResolverTypes.ts:19](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/CodeResolverTypes.ts#L19)
+[types/resource/CodeResolverTypes.ts:19](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/CodeResolverTypes.ts#L19)
 
 ___
 
@@ -228,7 +230,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:58](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L58)
+[types/resource/Annonations.ts:58](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L58)
 
 ___
 
@@ -245,7 +247,7 @@ ___
 
 #### Defined in
 
-[types/resource/CompareKey.ts:1](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/CompareKey.ts#L1)
+[types/resource/CompareKey.ts:1](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/CompareKey.ts#L1)
 
 ___
 
@@ -266,7 +268,7 @@ ___
 
 #### Defined in
 
-[types/resource/Rules.ts:17](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Rules.ts#L17)
+[types/resource/Rules.ts:17](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Rules.ts#L17)
 
 ___
 
@@ -286,7 +288,7 @@ ___
 
 #### Defined in
 
-[types/resource/ContentTypeInfo.ts:1](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ContentTypeInfo.ts#L1)
+[types/resource/ContentTypeInfo.ts:1](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ContentTypeInfo.ts#L1)
 
 ___
 
@@ -296,7 +298,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:25](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L25)
+[types/resource/ResultSetDataType.ts:25](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L25)
 
 ___
 
@@ -306,7 +308,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:36](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L36)
+[types/resource/Annonations.ts:36](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L36)
 
 ___
 
@@ -327,7 +329,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:112](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L112)
+[types/resource/ResultSetDataType.ts:112](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L112)
 
 ___
 
@@ -347,7 +349,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:121](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L121)
+[types/resource/ResultSetDataType.ts:121](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L121)
 
 ___
 
@@ -357,7 +359,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:47](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L47)
+[types/resource/Annonations.ts:47](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L47)
 
 ___
 
@@ -367,7 +369,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:85](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L85)
+[types/resource/Annonations.ts:85](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L85)
 
 ___
 
@@ -377,9 +379,9 @@ ___
 
 #### Defined in
 
-[types/resource/GeneralColumnType.ts:1](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/GeneralColumnType.ts#L1)
+[types/resource/GeneralColumnType.ts:1](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/GeneralColumnType.ts#L1)
 
-[types/resource/GeneralColumnType.ts:81](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/GeneralColumnType.ts#L81)
+[types/resource/GeneralColumnType.ts:81](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/GeneralColumnType.ts#L81)
 
 ___
 
@@ -389,7 +391,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:66](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L66)
+[types/resource/Annonations.ts:66](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L66)
 
 ___
 
@@ -408,7 +410,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:60](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L60)
+[types/resource/ResultSetDataType.ts:60](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L60)
 
 ___
 
@@ -425,7 +427,7 @@ ___
 
 #### Defined in
 
-[types/resource/QueryConditions.ts:1](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/QueryConditions.ts#L1)
+[types/resource/QueryConditions.ts:1](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/QueryConditions.ts#L1)
 
 ___
 
@@ -449,7 +451,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:67](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L67)
+[types/resource/ResultSetDataType.ts:67](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L67)
 
 ___
 
@@ -479,7 +481,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:8](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L8)
+[types/resource/ResultSetDataType.ts:8](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L8)
 
 ___
 
@@ -496,7 +498,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:83](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L83)
+[types/resource/ResultSetDataType.ts:83](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L83)
 
 ___
 
@@ -510,7 +512,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:81](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L81)
+[types/resource/ResultSetDataType.ts:81](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L81)
 
 ___
 
@@ -532,7 +534,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:88](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L88)
+[types/resource/ResultSetDataType.ts:88](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L88)
 
 ___
 
@@ -549,7 +551,7 @@ ___
 
 #### Defined in
 
-[types/resource/Rules.ts:23](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Rules.ts#L23)
+[types/resource/Rules.ts:23](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Rules.ts#L23)
 
 ___
 
@@ -567,7 +569,7 @@ ___
 
 #### Defined in
 
-[types/resource/Rules.ts:28](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Rules.ts#L28)
+[types/resource/Rules.ts:28](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Rules.ts#L28)
 
 ___
 
@@ -593,7 +595,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:98](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L98)
+[types/resource/ResultSetDataType.ts:98](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L98)
 
 ___
 
@@ -603,7 +605,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:49](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L49)
+[types/resource/Annonations.ts:49](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L49)
 
 ___
 
@@ -620,7 +622,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:48](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L48)
+[types/resource/ResultSetDataType.ts:48](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L48)
 
 ___
 
@@ -639,7 +641,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:53](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L53)
+[types/resource/ResultSetDataType.ts:53](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L53)
 
 ___
 
@@ -649,7 +651,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:75](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L75)
+[types/resource/Annonations.ts:75](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L75)
 
 ___
 
@@ -666,7 +668,7 @@ ___
 
 #### Defined in
 
-[types/resource/Rules.ts:3](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Rules.ts#L3)
+[types/resource/Rules.ts:3](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Rules.ts#L3)
 
 ___
 
@@ -686,7 +688,7 @@ ___
 
 #### Defined in
 
-[types/resource/Rules.ts:8](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Rules.ts#L8)
+[types/resource/Rules.ts:8](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Rules.ts#L8)
 
 ___
 
@@ -715,7 +717,7 @@ ___
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:26](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L26)
+[types/resource/ResultSetDataType.ts:26](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L26)
 
 ___
 
@@ -725,7 +727,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:40](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L40)
+[types/resource/Annonations.ts:40](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L40)
 
 ## Variables
 
@@ -750,7 +752,7 @@ ___
 
 #### Defined in
 
-[types/resource/Annonations.ts:3](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/Annonations.ts#L3)
+[types/resource/Annonations.ts:3](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/Annonations.ts#L3)
 
 ___
 
@@ -841,9 +843,9 @@ ___
 
 #### Defined in
 
-[types/resource/GeneralColumnType.ts:1](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/GeneralColumnType.ts#L1)
+[types/resource/GeneralColumnType.ts:1](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/GeneralColumnType.ts#L1)
 
-[types/resource/GeneralColumnType.ts:81](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/GeneralColumnType.ts#L81)
+[types/resource/GeneralColumnType.ts:81](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/GeneralColumnType.ts#L81)
 
 ## Functions
 
@@ -864,13 +866,16 @@ ___
 
 #### Defined in
 
-[utils/strings.ts:13](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/strings.ts#L13)
+[utils/strings.ts:13](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/strings.ts#L13)
 
 ___
 
 ### asyncDiff
 
 ▸ **asyncDiff**(`rdh1`, `rdh2`, `cancelToken?`): `Promise`\<[`DiffResult`](modules.md#diffresult)\>
+
+diff の非同期版。処理内容は同じだが、大量行でもイベントループをブロックしない
+よう1000行ごとにyieldし、cancelTokenによる途中キャンセルにも対応する。
 
 #### Parameters
 
@@ -887,7 +892,7 @@ ___
 
 #### Defined in
 
-[helpers/ResourceHelper.ts:126](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/helpers/ResourceHelper.ts#L126)
+[helpers/ResourceHelper.ts:222](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/helpers/ResourceHelper.ts#L222)
 
 ___
 
@@ -913,7 +918,7 @@ ___
 
 #### Defined in
 
-[utils/base.ts:3](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/base.ts#L3)
+[utils/base.ts:3](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/base.ts#L3)
 
 ___
 
@@ -934,7 +939,7 @@ ___
 
 #### Defined in
 
-[utils/strings.ts:29](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/strings.ts#L29)
+[utils/strings.ts:29](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/strings.ts#L29)
 
 ___
 
@@ -963,7 +968,7 @@ ___
 
 #### Defined in
 
-[resource/ResultSetDataBuilder.ts:30](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/ResultSetDataBuilder.ts#L30)
+[resource/ResultSetDataBuilder.ts:30](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/ResultSetDataBuilder.ts#L30)
 
 ___
 
@@ -983,13 +988,36 @@ ___
 
 #### Defined in
 
-[resource/ResultSetDataBuilder.ts:68](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/ResultSetDataBuilder.ts#L68)
+[resource/ResultSetDataBuilder.ts:68](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/ResultSetDataBuilder.ts#L68)
+
+___
+
+### debugLog
+
+▸ **debugLog**(`...args`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `...args` | `unknown`[] |
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[utils/debug.ts:7](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/debug.ts#L7)
 
 ___
 
 ### diff
 
 ▸ **diff**(`rdh1`, `rdh2`): [`DiffResult`](modules.md#diffresult)
+
+rdh1(旧)とrdh2(新)をcompareKeyで突き合わせ、差分を rdh1/rdh2 の行に
+Upd/Del/Add アノテーションとして書き込む(表示用のマーキング)。戻り値は件数サマリー。
 
 #### Parameters
 
@@ -1004,13 +1032,17 @@ ___
 
 #### Defined in
 
-[helpers/ResourceHelper.ts:18](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/helpers/ResourceHelper.ts#L18)
+[helpers/ResourceHelper.ts:158](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/helpers/ResourceHelper.ts#L158)
 
 ___
 
 ### diffToUndoChanges
 
 ▸ **diffToUndoChanges**(`rdh1`, `rdh2`): [`DiffToUndoChangesResult`](modules.md#difftoundochangesresult)
+
+rdh1(旧)とrdh2(新)をcompareKeyで突き合わせ、rdh2をrdh1の状態に戻すための
+UPDATE/INSERT/DELETE相当の操作記述(toBeUpdated/toBeInserted/toBeDeleted)を返す。
+diffと異なり行へのアノテーション付与は行わない。
 
 #### Parameters
 
@@ -1025,7 +1057,7 @@ ___
 
 #### Defined in
 
-[helpers/ResourceHelper.ts:254](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/helpers/ResourceHelper.ts#L254)
+[helpers/ResourceHelper.ts:314](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/helpers/ResourceHelper.ts#L314)
 
 ___
 
@@ -1045,7 +1077,7 @@ ___
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:3](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L3)
+[resource/GeneralColumnUtil.ts:4](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L4)
 
 ___
 
@@ -1065,7 +1097,7 @@ ___
 
 #### Defined in
 
-[utils/strings.ts:5](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/strings.ts#L5)
+[utils/strings.ts:5](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/strings.ts#L5)
 
 ___
 
@@ -1086,7 +1118,7 @@ ___
 
 #### Defined in
 
-[utils/strings.ts:25](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/strings.ts#L25)
+[utils/strings.ts:25](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/strings.ts#L25)
 
 ___
 
@@ -1106,7 +1138,7 @@ ___
 
 #### Defined in
 
-[utils/strings.ts:51](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/strings.ts#L51)
+[utils/strings.ts:51](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/strings.ts#L51)
 
 ___
 
@@ -1126,7 +1158,7 @@ ___
 
 #### Defined in
 
-[utils/base.ts:107](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/base.ts#L107)
+[utils/base.ts:107](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/base.ts#L107)
 
 ___
 
@@ -1146,7 +1178,7 @@ ___
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:194](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L194)
+[resource/GeneralColumnUtil.ts:195](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L195)
 
 ___
 
@@ -1170,7 +1202,7 @@ true:BYTEA,BLOB,MEDIUMBLOB,LONGBLOB,BINARY_SET OR BINARY
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:80](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L80)
+[resource/GeneralColumnUtil.ts:81](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L81)
 
 ___
 
@@ -1194,7 +1226,7 @@ true:BOOLEAN or BIT
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:182](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L182)
+[resource/GeneralColumnUtil.ts:183](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L183)
 
 ___
 
@@ -1214,7 +1246,7 @@ ___
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:147](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L147)
+[resource/GeneralColumnUtil.ts:148](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L148)
 
 ___
 
@@ -1238,7 +1270,7 @@ true:DATE,TIMESTAMP OR TIMESTAMP_WITH_TIME_ZONE
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:120](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L120)
+[resource/GeneralColumnUtil.ts:121](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L121)
 
 ___
 
@@ -1262,7 +1294,7 @@ true:TIME,TIME_WITH_TIME_ZONE,DATE,TIMESTAMP OR TIMESTAMP_WITH_TIME_ZONE
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:135](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L135)
+[resource/GeneralColumnUtil.ts:136](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L136)
 
 ___
 
@@ -1282,7 +1314,7 @@ ___
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:185](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L185)
+[resource/GeneralColumnUtil.ts:186](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L186)
 
 ___
 
@@ -1302,7 +1334,7 @@ ___
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:95](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L95)
+[resource/GeneralColumnUtil.ts:96](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L96)
 
 ___
 
@@ -1326,7 +1358,7 @@ true:JSON or JSONB
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:174](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L174)
+[resource/GeneralColumnUtil.ts:175](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L175)
 
 ___
 
@@ -1346,7 +1378,7 @@ ___
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:105](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L105)
+[resource/GeneralColumnUtil.ts:106](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L106)
 
 ___
 
@@ -1366,7 +1398,7 @@ ___
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:40](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L40)
+[resource/GeneralColumnUtil.ts:41](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L41)
 
 ___
 
@@ -1386,7 +1418,7 @@ item is ResultSetData
 
 #### Defined in
 
-[types/resource/ResultSetDataType.ts:136](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/types/resource/ResultSetDataType.ts#L136)
+[types/resource/ResultSetDataType.ts:136](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/types/resource/ResultSetDataType.ts#L136)
 
 ___
 
@@ -1406,7 +1438,7 @@ item is ResultSetDataBuilder
 
 #### Defined in
 
-[resource/ResultSetDataBuilder.ts:120](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/ResultSetDataBuilder.ts#L120)
+[resource/ResultSetDataBuilder.ts:120](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/ResultSetDataBuilder.ts#L120)
 
 ___
 
@@ -1426,7 +1458,7 @@ ___
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:62](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L62)
+[resource/GeneralColumnUtil.ts:63](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L63)
 
 ___
 
@@ -1446,7 +1478,7 @@ ___
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:156](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L156)
+[resource/GeneralColumnUtil.ts:157](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L157)
 
 ___
 
@@ -1466,7 +1498,7 @@ ___
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:165](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L165)
+[resource/GeneralColumnUtil.ts:166](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L166)
 
 ___
 
@@ -1486,7 +1518,7 @@ ___
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:7](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L7)
+[resource/GeneralColumnUtil.ts:8](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L8)
 
 ___
 
@@ -1506,7 +1538,7 @@ ___
 
 #### Defined in
 
-[resource/GeneralColumnUtil.ts:198](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/resource/GeneralColumnUtil.ts#L198)
+[resource/GeneralColumnUtil.ts:199](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/resource/GeneralColumnUtil.ts#L199)
 
 ___
 
@@ -1526,7 +1558,27 @@ ___
 
 #### Defined in
 
-[helpers/CodeResolver.ts:5](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/helpers/CodeResolver.ts#L5)
+[helpers/CodeResolver.ts:5](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/helpers/CodeResolver.ts#L5)
+
+___
+
+### setDebugEnabled
+
+▸ **setDebugEnabled**(`enabled`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `enabled` | `boolean` |
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[utils/debug.ts:3](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/debug.ts#L3)
 
 ___
 
@@ -1565,7 +1617,7 @@ console.log(numberSet); // Set { 1, 2, 3 }
 
 #### Defined in
 
-[utils/base.ts:130](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/base.ts#L130)
+[utils/base.ts:130](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/base.ts#L130)
 
 ___
 
@@ -1585,7 +1637,7 @@ ___
 
 #### Defined in
 
-[utils/base.ts:7](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/base.ts#L7)
+[utils/base.ts:7](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/base.ts#L7)
 
 ___
 
@@ -1605,7 +1657,7 @@ ___
 
 #### Defined in
 
-[utils/base.ts:28](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/base.ts#L28)
+[utils/base.ts:28](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/base.ts#L28)
 
 ___
 
@@ -1625,7 +1677,7 @@ ___
 
 #### Defined in
 
-[utils/base.ts:51](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/base.ts#L51)
+[utils/base.ts:51](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/base.ts#L51)
 
 ___
 
@@ -1645,7 +1697,7 @@ ___
 
 #### Defined in
 
-[utils/strings.ts:1](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/strings.ts#L1)
+[utils/strings.ts:1](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/strings.ts#L1)
 
 ___
 
@@ -1665,7 +1717,7 @@ ___
 
 #### Defined in
 
-[utils/base.ts:10](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/base.ts#L10)
+[utils/base.ts:10](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/base.ts#L10)
 
 ___
 
@@ -1685,7 +1737,7 @@ ___
 
 #### Defined in
 
-[utils/base.ts:91](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/base.ts#L91)
+[utils/base.ts:91](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/base.ts#L91)
 
 ___
 
@@ -1705,4 +1757,4 @@ ___
 
 #### Defined in
 
-[utils/strings.ts:66](https://github.com/l-v-yonsama/rdh/blob/2db919d55c48b3dd0627239eebe5886b0a7df294/src/utils/strings.ts#L66)
+[utils/strings.ts:66](https://github.com/l-v-yonsama/rdh/blob/e208de922c21f3245dccac17e5d0efd9849149bd/src/utils/strings.ts#L66)
