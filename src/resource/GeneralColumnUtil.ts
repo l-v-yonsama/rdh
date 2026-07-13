@@ -18,8 +18,15 @@ export function parseColumnType(s: string | null | undefined): GC {
     return GC.TEXT;
   } else if ("tiny" === s) {
     return GC.TINYINT;
-  } else if ("datetime" === s || "timestamp(6)" === s) {
+  } else if (
+    "datetime" === s ||
+    "datetime2" === s ||
+    "smalldatetime" === s ||
+    "timestamp(6)" === s
+  ) {
     return GC.TIMESTAMP;
+  } else if ("datetimeoffset" === s) {
+    return GC.TIMESTAMP_WITH_TIME_ZONE;
   } else if ("varchar2" === s) {
     return GC.VARCHAR;
   } else if ("number" === s) {
