@@ -4,6 +4,7 @@ import {
   GeneralColumnType,
   resolveCodeLabel,
   ResultSetDataBuilder,
+  RowHelper,
   setOf,
 } from "../src";
 
@@ -79,6 +80,56 @@ describe("ResultSetDataBuilder", () => {
       expect(Buffer.isBuffer(row.values.b1)).toBe(true);
       expect(row.values.b1).toEqual(Buffer.from([0, 1, 2, 244]));
     });
+    it("should rehydrate Date/Buffer values embedded inside annotations (Upd/Fil)", () => {
+      const source = createRdb();
+      const row0 = source.rs.rows[0];
+      RowHelper.pushAnnotation(row0, "d1", {
+        type: "Upd",
+        values: { otherValue: new Date("2024-09-01 00:00:00") },
+      });
+      RowHelper.pushAnnotation(row0, "b1", {
+        type: "Upd",
+        values: { otherValue: Buffer.from([9, 9, 9]) },
+      });
+      RowHelper.pushAnnotation(row0, "s1", {
+        type: "Fil",
+        values: {
+          name: "a.txt",
+          size: 3,
+          lastModified: new Date("2024-01-02 03:04:05"),
+          contentTypeInfo: {
+            contentType: "text/plain",
+            isTextValue: true,
+            renderType: "Text",
+            fileName: "a.txt",
+          },
+        },
+      });
+
+      const copiedRow0 = ResultSetDataBuilder.from(source).rs.rows[0];
+
+      const updDate = RowHelper.getFirstAnnotationOf(copiedRow0, "d1", "Upd");
+      expect(updDate?.values?.otherValue instanceof Date).toBe(true);
+      expect((updDate?.values?.otherValue as Date).getTime()).toBe(
+        new Date("2024-09-01 00:00:00").getTime()
+      );
+
+      const updBuf = RowHelper.getFirstAnnotationOf(copiedRow0, "b1", "Upd");
+      expect(Buffer.isBuffer(updBuf?.values?.otherValue)).toBe(true);
+      expect(updBuf?.values?.otherValue).toEqual(Buffer.from([9, 9, 9]));
+
+      const fil = RowHelper.getFirstAnnotationOf(copiedRow0, "s1", "Fil");
+      expect(fil?.values?.lastModified instanceof Date).toBe(true);
+      expect((fil?.values?.lastModified as Date).getTime()).toBe(
+        new Date("2024-01-02 03:04:05").getTime()
+      );
+
+      // 既存のCod注釈(n1列、createRdb内でresolveCodeLabelにより付与済み)も
+      // 引き続き保持されている(今回の修正で壊れていないことの確認)。
+      const cod = RowHelper.getFirstAnnotationOf(copiedRow0, "n1", "Cod");
+      expect(cod).not.toBeUndefined();
+    });
+
     it("empty string should be null", () => {
       const CSV: any[][] = [
         [

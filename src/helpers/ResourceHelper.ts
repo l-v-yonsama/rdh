@@ -7,6 +7,7 @@ import {
   isNotSupportDiffType,
 } from "../resource";
 import {
+  AnnotationType,
   CompareKey,
   DiffResult,
   DiffToUndoChangesResult,
@@ -14,6 +15,8 @@ import {
   ResultSetData,
 } from "../types";
 import isDate from "../utils";
+
+const DIFF_ANNOTATION_TYPES: AnnotationType[] = ["Upd", "Del", "Add"];
 
 type DiffContext =
   | { ok: false; message: string }
@@ -73,13 +76,14 @@ function resolveDiffContext(
     .filter((it) => isNotSupportDiffType(it.type))
     .map((it) => it.name);
 
-  // NOTE: このクリアは使い捨てクローン(rdb1.rs/rdb2.rs)にしか効いておらず、実際に
-  // Upd/Del/Addアノテーションが書き込まれる rdh1/rdh2 本体には影響しない。本来は
-  // 引数を破壊せずannotated cloneを返す設計だったが、Cod(コード解決)/
-  // Rul(ルール検証)/Lnt/Stl/Fil など diff とは無関係な既存アノテーションを誤って
-  // 消さないよう、現状は意図的にこのままにしている(挙動変更は別対応)。
-  RdhHelper.clearAllAnotations(rdb1.rs);
-  RdhHelper.clearAllAnotations(rdb2.rs);
+  // クローン(rdb1.rs/rdb2.rs)側でのみ、直近のdiff結果として残っている可能性が
+  // あるUpd/Del/Addを型スコープでクリアする。db-notebook側ではdiffを繰り返し
+  // 実行する運用があり、渡されるrdh1/rdh2自体が前回のdiff結果(=非破壊化後は
+  // 前回のクローン)を再利用することがあるため、古いUpd/Del/Addを引き継がない
+  // ようにする。Cod/Rul/Lnt/Stl/Filなど他の既存アノテーションはここでは触らない。
+  // 引数rdh1/rdh2そのものは一切変更しない(非破壊)。
+  RdhHelper.clearAnnotationsByType(rdb1.rs, DIFF_ANNOTATION_TYPES);
+  RdhHelper.clearAnnotationsByType(rdb2.rs, DIFF_ANNOTATION_TYPES);
 
   return {
     ok: true,
@@ -152,8 +156,9 @@ function matchCompareKeyRows(
 }
 
 /**
- * rdh1(旧)とrdh2(新)をcompareKeyで突き合わせ、差分を rdh1/rdh2 の行に
- * Upd/Del/Add アノテーションとして書き込む(表示用のマーキング)。戻り値は件数サマリー。
+ * rdh1(旧)とrdh2(新)をcompareKeyで突き合わせる。引数rdh1/rdh2は変更せず、
+ * それぞれのクローンにUpd/Del/Addアノテーションを付与して結果(result.rdh1/rdh2)
+ * として返す。戻り値はそのクローンと件数サマリー。
  */
 export const diff = (rdh1: ResultSetData, rdh2: ResultSetData): DiffResult => {
   const result: DiffResult = {
@@ -169,9 +174,9 @@ export const diff = (rdh1: ResultSetData, rdh2: ResultSetData): DiffResult => {
     result.message = context.message;
     return result;
   }
-  const { keynames, compareKey, supportedKeyNames } = context;
+  const { keynames, compareKey, supportedKeyNames, rdb1, rdb2 } = context;
 
-  matchCompareKeyRows(rdh1.rows, rdh2.rows, compareKey, {
+  matchCompareKeyRows(rdb1.rs.rows, rdb2.rs.rows, compareKey, {
     onMatched: (row1, row2) => {
       const changed = diffRowColumns(row1, row2, supportedKeyNames);
       changed.forEach(({ name, v1, v2 }) => {
@@ -206,6 +211,8 @@ export const diff = (rdh1: ResultSetData, rdh2: ResultSetData): DiffResult => {
   });
 
   result.ok = true;
+  result.rdh1 = rdb1.rs;
+  result.rdh2 = rdb2.rs;
   if (result.inserted === 0 && result.deleted === 0 && result.updated === 0) {
     result.message = "No changes";
   } else {
@@ -237,19 +244,21 @@ export const asyncDiff = async (
     result.message = context.message;
     return result;
   }
-  const { keynames, compareKey, supportedKeyNames } = context;
+  const { keynames, compareKey, supportedKeyNames, rdb1, rdb2 } = context;
+  const rows1 = rdb1.rs.rows;
+  const rows2 = rdb2.rs.rows;
 
   const hasAlreadyChecked = new Set<string>();
 
-  for (let i = 0; i < rdh1.rows.length; i++) {
+  for (let i = 0; i < rows1.length; i++) {
     if (cancelToken?.isCancellationRequested) {
       result.message = `Cancelled.`;
       return result;
     }
-    const row1 = rdh1.rows[i];
+    const row1 = rows1[i];
     const key1 = createCompareKeysValue(compareKey, row1);
     hasAlreadyChecked.add(key1);
-    const row2 = rdh2.rows.find(
+    const row2 = rows2.find(
       (candidate) => createCompareKeysValue(compareKey, candidate) === key1
     );
     if (row2) {
@@ -279,12 +288,12 @@ export const asyncDiff = async (
     }
   }
 
-  for (let i = 0; i < rdh2.rows.length; i++) {
+  for (let i = 0; i < rows2.length; i++) {
     if (cancelToken?.isCancellationRequested) {
       result.message = `Cancelled.`;
       return result;
     }
-    const row2 = rdh2.rows[i];
+    const row2 = rows2[i];
     const key2 = createCompareKeysValue(compareKey, row2);
     if (!hasAlreadyChecked.has(key2)) {
       keynames.forEach((name) => {
@@ -297,6 +306,8 @@ export const asyncDiff = async (
     }
   }
   result.ok = true;
+  result.rdh1 = rdb1.rs;
+  result.rdh2 = rdb2.rs;
   if (result.inserted === 0 && result.deleted === 0 && result.updated === 0) {
     result.message = "No changes";
   } else {
@@ -309,7 +320,8 @@ export const asyncDiff = async (
 /**
  * rdh1(旧)とrdh2(新)をcompareKeyで突き合わせ、rdh2をrdh1の状態に戻すための
  * UPDATE/INSERT/DELETE相当の操作記述(toBeUpdated/toBeInserted/toBeDeleted)を返す。
- * diffと異なり行へのアノテーション付与は行わない。
+ * diffと異なり行へのアノテーション付与は行わない。引数rdh1/rdh2は変更しない
+ * (内部ではresolveDiffContextが作るクローンの行に対してのみ値を読み書きする)。
  */
 export const diffToUndoChanges = (
   rdh1: ResultSetData,
@@ -327,9 +339,10 @@ export const diffToUndoChanges = (
     result.message = context.message;
     return result;
   }
-  const { compareKey, supportedKeyNames, notSupportedKeyNames } = context;
+  const { compareKey, supportedKeyNames, notSupportedKeyNames, rdb1, rdb2 } =
+    context;
 
-  matchCompareKeyRows(rdh1.rows, rdh2.rows, compareKey, {
+  matchCompareKeyRows(rdb1.rs.rows, rdb2.rs.rows, compareKey, {
     onMatched: (row1, row2) => {
       const changed = diffRowColumns(row1, row2, supportedKeyNames);
       if (changed.length) {
@@ -344,6 +357,8 @@ export const diffToUndoChanges = (
       }
     },
     onRemoved: (row1) => {
+      // row1はクローン(rdb1.rs.rows)由来なので、ここでvaluesを書き換えても
+      // 引数rdh1には影響しない。
       const { values } = row1;
       if (notSupportedKeyNames.length) {
         notSupportedKeyNames.forEach((it) => {

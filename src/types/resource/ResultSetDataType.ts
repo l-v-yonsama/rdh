@@ -116,6 +116,10 @@ export type DiffResult = {
   inserted: number;
   updated: number;
   updatedColumns: number;
+  /** 引数rdh1のクローンにUpd/Del/Addアノテーションを付与したもの(ok:trueの場合のみ設定される)。 */
+  rdh1?: ResultSetData;
+  /** 引数rdh2のクローンにUpd/Del/Addアノテーションを付与したもの(ok:trueの場合のみ設定される)。 */
+  rdh2?: ResultSetData;
 };
 
 export type DiffToUndoChangesResult = {

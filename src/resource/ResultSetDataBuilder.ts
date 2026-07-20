@@ -210,7 +210,11 @@ export class RowHelper {
     });
   }
 
-  static clearAnnotationByType(row: RdhRow, type: AnnotationType): void {
+  static clearAnnotationByType(
+    row: RdhRow,
+    type: AnnotationType | AnnotationType[]
+  ): void {
+    const types = Array.isArray(type) ? type : [type];
     const meta_keys = Object.keys(row.meta);
     if (meta_keys.length > 0) {
       for (let i = 0; i < meta_keys.length; i++) {
@@ -219,7 +223,7 @@ export class RowHelper {
           continue;
         }
         for (let j = 0; j < annotations.length; j++) {
-          if (annotations[j].type === type) {
+          if (types.includes(annotations[j].type)) {
             annotations.splice(j, 1);
             j--;
           }
@@ -270,6 +274,13 @@ export class RowHelper {
 export class RdhHelper {
   static clearAllAnotations(rdh: ResultSetData): void {
     rdh.rows.forEach((row) => RowHelper.clearAllAnnotations(row));
+  }
+
+  static clearAnnotationsByType(
+    rdh: ResultSetData,
+    type: AnnotationType | AnnotationType[]
+  ): void {
+    rdh.rows.forEach((row) => RowHelper.clearAnnotationByType(row, type));
   }
 }
 
@@ -377,6 +388,36 @@ export class ResultSetDataBuilder {
       const binaryKeys = rdb.rs.keys
         .filter((k) => isBinaryLike(k.type))
         .map((k) => k.name);
+      // JSON往復で壊れるDate/Bufferは行のvaluesだけでなく、アノテーション内に埋め
+      // 込まれた値(Upd.values.otherValue、Fil.values.lastModified)にも起こりうる
+      // ため、行のvaluesと同じ要領でこちらも復元する。
+      const rehydrateAnnotationValues = (meta: RdhRowMeta): void => {
+        Object.keys(meta).forEach((columnName) => {
+          meta[columnName].forEach((annotation) => {
+            if (annotation.type === "Upd" && annotation.values) {
+              const otherValue = annotation.values.otherValue;
+              if (otherValue == null) {
+                return;
+              }
+              if (dateKeys.includes(columnName)) {
+                annotation.values.otherValue = toDate(otherValue);
+              } else if (
+                binaryKeys.includes(columnName) &&
+                typeof otherValue === "object" &&
+                otherValue["type"] === "Buffer" &&
+                Array.isArray(otherValue["data"])
+              ) {
+                annotation.values.otherValue = Buffer.from(otherValue.data);
+              }
+            } else if (annotation.type === "Fil" && annotation.values) {
+              const lastModified = annotation.values.lastModified;
+              if (lastModified) {
+                annotation.values.lastModified = toDate(lastModified);
+              }
+            }
+          });
+        });
+      };
       plainObj.rows.forEach((row) => {
         const { values, meta } = row;
         for (const dateKey of dateKeys) {
@@ -395,6 +436,7 @@ export class ResultSetDataBuilder {
             values[binaryKey] = Buffer.from(v.data);
           }
         }
+        rehydrateAnnotationValues(meta);
         rdb.addRow(values, meta);
       });
       if (plainObj.meta) {
