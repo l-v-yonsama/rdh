@@ -53,6 +53,26 @@ const createMixedPair = (): {
   return { rdb1, rdb2 };
 };
 
+/** id(PK, INTEGER)とv(DOUBLE_PRECISION)を持つペアを、vの値だけ変えて作る。 */
+const createNumericPair = (
+  v1: number,
+  v2: number
+): { rdb1: ResultSetDataBuilder; rdb2: ResultSetDataBuilder } => {
+  const keys = [
+    createRdhKey({ name: "id", type: GeneralColumnType.INTEGER }),
+    createRdhKey({ name: "v", type: GeneralColumnType.DOUBLE_PRECISION }),
+  ];
+  const rdb1 = new ResultSetDataBuilder(keys);
+  rdb1.addRow({ id: 1, v: v1 });
+  rdb1.updateMeta({ compareKeys: [primaryCompareKey] });
+
+  const rdb2 = new ResultSetDataBuilder(keys);
+  rdb2.addRow({ id: 1, v: v2 });
+  rdb2.updateMeta({ compareKeys: [primaryCompareKey] });
+
+  return { rdb1, rdb2 };
+};
+
 describe("ResourceHelper", () => {
   describe.each([
     ["diff", diff],
@@ -269,6 +289,64 @@ describe("ResourceHelper", () => {
       expect(rdb1.rs).toEqual(before1);
       const row1_2 = rdb1.rs.rows.find((r) => r.values.id === 2);
       expect(row1_2?.values.payload).toEqual(Buffer.from([2]));
+    });
+  });
+
+  // resolveDiffContextが内部でResultSetDataBuilder.from()によるクローンを比較・
+  // 戻り値の両方に使うため、そのクローンがNaN/Infinity/-0等を破壊すると、実際には
+  // 変更があるのに「変更なし」と誤判定してしまう(ResultSetDataBuilder.from側の
+  // 修正で解消される問題への回帰テスト)。
+  describe("special numeric values (NaN/Infinity/-0)", () => {
+    it("detects Infinity -> null as an update", () => {
+      const { rdb1, rdb2 } = createNumericPair(Infinity, null as any);
+      const result = diff(rdb1.rs, rdb2.rs);
+      expect(result.updated).toBe(1);
+
+      const row1 = findRow(result.rdh1!, 1);
+      expect(row1.values.v).toBe(Infinity);
+      const updAnno = RowHelper.getFirstAnnotationOf(row1, "v", "Upd");
+      expect(updAnno?.values?.otherValue).toBe(null);
+
+      const row2 = findRow(result.rdh2!, 1);
+      expect(row2.values.v).toBe(null);
+    });
+
+    it("detects Infinity -> -Infinity as an update", () => {
+      const { rdb1, rdb2 } = createNumericPair(Infinity, -Infinity);
+      const result = diff(rdb1.rs, rdb2.rs);
+      expect(result.updated).toBe(1);
+      expect(findRow(result.rdh1!, 1).values.v).toBe(Infinity);
+      expect(findRow(result.rdh2!, 1).values.v).toBe(-Infinity);
+    });
+
+    it("detects NaN -> null as an update", () => {
+      const { rdb1, rdb2 } = createNumericPair(NaN, null as any);
+      const result = diff(rdb1.rs, rdb2.rs);
+      expect(result.updated).toBe(1);
+      expect(Number.isNaN(findRow(result.rdh1!, 1).values.v)).toBe(true);
+    });
+
+    it("asyncDiff agrees with the sync diff for special numeric values", async () => {
+      const { rdb1, rdb2 } = createNumericPair(Infinity, -Infinity);
+      const result = await asyncDiff(rdb1.rs, rdb2.rs);
+      expect(result.updated).toBe(1);
+      expect(findRow(result.rdh1!, 1).values.v).toBe(Infinity);
+      expect(findRow(result.rdh2!, 1).values.v).toBe(-Infinity);
+    });
+
+    it("diffToUndoChanges keeps special numeric values in toBeUpdated without mutating the inputs", () => {
+      const { rdb1, rdb2 } = createNumericPair(Infinity, -Infinity);
+      const before1 = ResultSetDataBuilder.from(rdb1).build();
+      const before2 = ResultSetDataBuilder.from(rdb2).build();
+
+      const result = diffToUndoChanges(rdb1.rs, rdb2.rs);
+
+      expect(result.ok).toBe(true);
+      expect(result.toBeUpdated).toEqual([
+        { conditions: { id: 1 }, values: { v: Infinity } },
+      ]);
+      expect(rdb1.rs).toEqual(before1);
+      expect(rdb2.rs).toEqual(before2);
     });
   });
 });

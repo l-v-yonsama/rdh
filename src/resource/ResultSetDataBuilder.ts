@@ -133,6 +133,43 @@ function toRdhKeys(keys: Array<string | RdhKey>): RdhKey[] {
   });
 }
 
+/**
+ * RDHが実際に扱う値を対象にしたディープクローン。
+ *
+ * `JSON.parse(JSON.stringify(...))` は手軽だが、次の値を静かに破壊するか例外を
+ * 投げる: NaN/Infinity/-Infinity → null、-0 → 0、bigint → TypeError、
+ * Date → ISO文字列、Buffer/Set → 中身の失われたプレーンオブジェクト。
+ * これらはGC.BIGINT・数値型・日付型・バイナリ型・STRING_SET/NUMERIC_SET/
+ * BINARY_SET型として実際に扱われうる値であり、`ResultSetDataBuilder.from()`
+ * (ひいては非破壊化されたdiff系関数の比較・戻り値)の正しさに直結する。
+ * ここではプリミティブ値をそのまま返し、Date/Buffer/Setのみ中身を保った別
+ * インスタンスとして複製することで、これらの値を保持する。
+ */
+function cloneRdhValue<T>(value: T): T {
+  if (value instanceof Date) {
+    return new Date(value.getTime()) as T;
+  }
+  if (Buffer.isBuffer(value)) {
+    return Buffer.from(value) as T;
+  }
+  if (value instanceof Set) {
+    return new Set(
+      Array.from(value, (item) => cloneRdhValue(item))
+    ) as T;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => cloneRdhValue(item)) as T;
+  }
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [key, cloneRdhValue(child)])
+    ) as T;
+  }
+  // string/number(NaN・Infinity・-0含む)/boolean/null/undefined/bigintは
+  // イミュータブルなのでそのまま返してよい。
+  return value;
+}
+
 export class RowHelper {
   static getRuleEngineValues(row: RdhRow, keys: RdhKey[]): Record<string, any> {
     const ret: Record<string, any> = {};
@@ -380,7 +417,7 @@ export class ResultSetDataBuilder {
       throw new Error(typeof list + " has no value.");
     }
     const cloneFromRdh = (obj: ResultSetData): ResultSetDataBuilder => {
-      const plainObj: ResultSetData = JSON.parse(JSON.stringify(obj));
+      const plainObj: ResultSetData = cloneRdhValue(obj);
       const rdb = new ResultSetDataBuilder(plainObj.keys);
       const dateKeys = rdb.rs.keys
         .filter((k) => isDateTimeOrDate(k.type))
@@ -388,9 +425,24 @@ export class ResultSetDataBuilder {
       const binaryKeys = rdb.rs.keys
         .filter((k) => isBinaryLike(k.type))
         .map((k) => k.name);
-      // JSON往復で壊れるDate/Bufferは行のvaluesだけでなく、アノテーション内に埋め
-      // 込まれた値(Upd.values.otherValue、Fil.values.lastModified)にも起こりうる
-      // ため、行のvaluesと同じ要領でこちらも復元する。
+      // cloneRdhValueは、この関数に渡された時点で「生きている」Date/Buffer/Set
+      // インスタンスを直接複製する。それらについては以下の処理は毎回素通りする
+      // だけの無害な処理になる。
+      //
+      // 一方で以下の処理が本当に意味を持つのは別のケースである: from()に渡さ
+      // れた引数obj自体が、この呼び出しより前に、どこか別の場所で一度JSONを
+      // 経由して平坦化されたプレーンオブジェクト(Dateが
+      // "2024-01-01T00:00:00.000Z"のような文字列、Bufferが
+      // {type:"Buffer",data:[...]}のような形)である場合。このケースでは
+      // cloneRdhValueは(instanceof Date等に該当しないため)その文字列/プレーン
+      // オブジェクトをそのまま素通りさせるので、ここで初めてtoDate()/
+      // Buffer.from()が実際に型を復元する仕事をする。
+      //
+      // from(list: any, ...)は引数の型がanyで、isResultSetData()による判定も
+      // created/keys/rows/metaの有無を見る構造的なチェックのみ(値の中身が
+      // 本物のDate/Bufferかどうかは見ない)ため、「JSON整形済みのプレーン
+      // オブジェクトをfrom()に渡す」という使い方自体はこのAPIの型上禁止され
+      // ていない。
       const rehydrateAnnotationValues = (meta: RdhRowMeta): void => {
         Object.keys(meta).forEach((columnName) => {
           meta[columnName].forEach((annotation) => {
@@ -420,6 +472,9 @@ export class ResultSetDataBuilder {
       };
       plainObj.rows.forEach((row) => {
         const { values, meta } = row;
+        // このrehydrateAnnotationValues定義直前のコメント参照: 通常は
+        // cloneRdhValueが既に複製済みのため無害だが、JSON経由で平坦化された
+        // 入力に対しては、この2ループが実際に型を復元する側になる。
         for (const dateKey of dateKeys) {
           const v = values[dateKey];
           values[dateKey] = v === null ? null : toDate(v);

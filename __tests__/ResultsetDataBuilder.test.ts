@@ -130,6 +130,115 @@ describe("ResultSetDataBuilder", () => {
       expect(cod).not.toBeUndefined();
     });
 
+    it("should preserve NaN, Infinity, -Infinity, and -0 in numeric columns", () => {
+      const source = new ResultSetDataBuilder([
+        createRdhKey({ name: "id", type: GeneralColumnType.INTEGER }),
+        createRdhKey({ name: "v", type: GeneralColumnType.DOUBLE_PRECISION }),
+      ]);
+      source.addRow({ id: 1, v: NaN });
+      source.addRow({ id: 2, v: Infinity });
+      source.addRow({ id: 3, v: -Infinity });
+      source.addRow({ id: 4, v: -0 });
+
+      const copied = ResultSetDataBuilder.from(source);
+
+      expect(Number.isNaN(copied.rs.rows[0].values.v)).toBe(true);
+      expect(copied.rs.rows[1].values.v).toBe(Infinity);
+      expect(copied.rs.rows[2].values.v).toBe(-Infinity);
+      expect(Object.is(copied.rs.rows[3].values.v, -0)).toBe(true);
+    });
+
+    it("should clone bigint values without throwing and keep them equal", () => {
+      // BigInt literal(123n)はtsconfigのtarget(es6)では使えないためBigInt()を使う
+      const bigValue = BigInt("9007199254740993");
+      const source = new ResultSetDataBuilder([
+        createRdhKey({ name: "id", type: GeneralColumnType.BIGINT }),
+      ]);
+      source.addRow({ id: bigValue });
+
+      let copied: ResultSetDataBuilder | undefined;
+      expect(() => {
+        copied = ResultSetDataBuilder.from(source);
+      }).not.toThrow();
+      expect(copied!.rs.rows[0].values.id).toBe(bigValue);
+    });
+
+    it("should clone Date/Buffer/Set as distinct instances with the same content", () => {
+      const source = createRdb();
+      const originalDate = source.rs.rows[0].values.d1 as Date;
+      const originalBuf = source.rs.rows[0].values.b1 as Buffer;
+      const originalSet = source.rs.rows[0].values.ss1 as Set<string>;
+
+      const copied = ResultSetDataBuilder.from(source);
+      const clonedDate = copied.rs.rows[0].values.d1;
+      const clonedBuf = copied.rs.rows[0].values.b1;
+      const clonedSet = copied.rs.rows[0].values.ss1;
+
+      expect(clonedDate instanceof Date).toBe(true);
+      expect(clonedDate).not.toBe(originalDate);
+      expect((clonedDate as Date).getTime()).toBe(originalDate.getTime());
+
+      expect(Buffer.isBuffer(clonedBuf)).toBe(true);
+      expect(clonedBuf).not.toBe(originalBuf);
+      expect(clonedBuf).toEqual(originalBuf);
+
+      expect(clonedSet instanceof Set).toBe(true);
+      expect(clonedSet).not.toBe(originalSet);
+      expect(Array.from(clonedSet as Set<string>)).toEqual(Array.from(originalSet));
+    });
+
+    it("should preserve special numeric values nested in arrays/objects", () => {
+      const source = new ResultSetDataBuilder([
+        createRdhKey({ name: "id", type: GeneralColumnType.INTEGER }),
+        createRdhKey({ name: "j", type: GeneralColumnType.JSON }),
+      ]);
+      source.addRow({
+        id: 1,
+        j: { list: [NaN, Infinity], nested: { v: -Infinity } },
+      });
+
+      const copied = ResultSetDataBuilder.from(source);
+      const j = copied.rs.rows[0].values.j;
+
+      expect(Number.isNaN(j.list[0])).toBe(true);
+      expect(j.list[1]).toBe(Infinity);
+      expect(j.nested.v).toBe(-Infinity);
+    });
+
+    it("should preserve special numeric values embedded in Upd annotations", () => {
+      const source = new ResultSetDataBuilder([
+        createRdhKey({ name: "id", type: GeneralColumnType.INTEGER }),
+        createRdhKey({ name: "v", type: GeneralColumnType.DOUBLE_PRECISION }),
+      ]);
+      source.addRow({ id: 1, v: 1 });
+      RowHelper.pushAnnotation(source.rs.rows[0], "v", {
+        type: "Upd",
+        values: { otherValue: Infinity },
+      });
+
+      const copiedRow0 = ResultSetDataBuilder.from(source).rs.rows[0];
+      const upd = RowHelper.getFirstAnnotationOf(copiedRow0, "v", "Upd");
+      expect(upd?.values?.otherValue).toBe(Infinity);
+    });
+
+    it("should not share mutable objects between the clone and the original", () => {
+      const source = createRdb();
+      const copied = ResultSetDataBuilder.from(source);
+
+      copied.rs.rows[0].values.b1[0] = 255;
+      expect(source.rs.rows[0].values.b1[0]).toBe(0);
+
+      (copied.rs.rows[0].values.ss1 as Set<string>).add("mutated");
+      expect(
+        (source.rs.rows[0].values.ss1 as Set<string>).has("mutated")
+      ).toBe(false);
+
+      copied.rs.rows[0].values.d1.setFullYear(1999);
+      expect((source.rs.rows[0].values.d1 as Date).getFullYear()).not.toBe(
+        1999
+      );
+    });
+
     it("empty string should be null", () => {
       const CSV: any[][] = [
         [
