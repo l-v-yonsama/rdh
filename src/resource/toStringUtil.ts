@@ -42,7 +42,7 @@ type NumberedRow = { row: RdhRow; rowNo: number };
 /**
  * 表示対象行を「全件」か「先頭+末尾(省略記号つき)」かに選り分ける。
  * HTML/Markdown/CSV(TabularContentString.toString())とPlainStringの両方が
- * 同じ選別ロジックを個別に持っていた(4.21)ため、ここへ共通化する。
+ * 同じ選別ロジックを個別に持っていたため、ここへ共通化する。
  */
 type PrintableRowsPlan =
   | { truncated: false; rows: NumberedRow[] }
@@ -93,7 +93,7 @@ export const toContentString = (
  * メソッド(TabularContentString.toString())には乗らない(list-itは全行を
  * バッファへ溜めてから列幅を揃えて一括描画するため)。そのためBaseStringは
  * 「全フォーマット共通のヘルパー」だけを持ち、head/tail描画のtemplate
- * methodはTabularContentStringへ切り出す(4.21)。PlainStringはBaseStringを
+ * methodはTabularContentStringへ切り出す。PlainStringはBaseStringを
  * 直接継承し、使わない抽象メソッドを「呼ばれたら例外」で埋める必要がない。
  */
 abstract class BaseString {
@@ -117,7 +117,7 @@ abstract class BaseString {
    * withCodeLabel/withRuleViolationの設定を踏まえて、1セル分のコード
    * ラベル・ルール違反マーカーをまとめて取得する。各フォーマットの行描画
    * (pushRowData/PlainString.toString())で同じ2行(label取得・ruleMarker
-   * 取得)が重複していた(4.21)ため、ここへ共通化する。
+   * 取得)が重複していたため、ここへ共通化する。
    */
   protected resolveCellDecorations(
     row: RdhRow,

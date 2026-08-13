@@ -41,7 +41,7 @@
 
 #### Defined in
 
-[resource/ResultSetDataBuilder.ts:275](https://github.com/l-v-yonsama/rdh/blob/ccbf72ceb65e2a7c08973c33c21bcd511ab557c3/src/resource/ResultSetDataBuilder.ts#L275)
+[resource/ResultSetDataBuilder.ts:275](https://github.com/l-v-yonsama/rdh/blob/95947ddd2f6242358591e0c4af929bfee4e58462/src/resource/ResultSetDataBuilder.ts#L275)
 
 ___
 
@@ -62,4 +62,4 @@ ___
 
 #### Defined in
 
-[resource/ResultSetDataBuilder.ts:279](https://github.com/l-v-yonsama/rdh/blob/ccbf72ceb65e2a7c08973c33c21bcd511ab557c3/src/resource/ResultSetDataBuilder.ts#L279)
+[resource/ResultSetDataBuilder.ts:279](https://github.com/l-v-yonsama/rdh/blob/95947ddd2f6242358591e0c4af929bfee4e58462/src/resource/ResultSetDataBuilder.ts#L279)

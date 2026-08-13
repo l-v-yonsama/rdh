@@ -1,9 +1,8 @@
 /**
  * diff() / asyncDiff() / diffToUndoChanges() の行突合ロジックに関する回帰テスト。
  *
- * misc/full-review-remediation-plan-2026-08-13.md のPhase 1/Phase 2に対応する。
- * 特に4.7(比較キーの衝突)は、修正前は誤って「同じ行」に突合されてしまう
- * ケースを網羅する最重要項目。
+ * 特に「比較キーの衝突」回帰テストは、修正前は誤って「同じ行」に突合されて
+ * しまうケースを網羅する最重要項目。
  */
 import {
   CompareKey,
@@ -83,10 +82,10 @@ const runners: [
 ];
 
 // ---------------------------------------------------------------------------
-// 4.6 基本動作(3関数で共通化したテーブル駆動テスト)
+// 基本動作(3関数で共通化したテーブル駆動テスト)
 // ---------------------------------------------------------------------------
 
-describe("4.6 basic matching (shared across diff/asyncDiff/diffToUndoChanges)", () => {
+describe("basic matching (shared across diff/asyncDiff/diffToUndoChanges)", () => {
   const cases: [
     string,
     { id: number; val: string | null }[],
@@ -179,10 +178,10 @@ describe("4.6 basic matching (shared across diff/asyncDiff/diffToUndoChanges)", 
 });
 
 // ---------------------------------------------------------------------------
-// 4.7 比較キーの衝突回帰テスト(最重要)
+// 比較キーの衝突回帰テスト(最重要)
 // ---------------------------------------------------------------------------
 
-describe("4.7 compare key collision regression", () => {
+describe("compare key collision regression", () => {
   const singleKeyDef: RdhKey[] = [
     createRdhKey({ name: "k", type: GeneralColumnType.TEXT }),
     createRdhKey({ name: "val", type: GeneralColumnType.TEXT }),
@@ -389,20 +388,20 @@ describe("4.7 compare key collision regression", () => {
   });
 
   it("handles unicode, newline, and NUL characters in string keys", () => {
-    const weirdKey = "こんにちは\n 世界";
+    const weirdKey = "こんにちは\n\u0000世界";
     const rdb1 = buildRdb(singleKeyDef, [{ k: weirdKey, val: "a" }], [singleKey]);
     const rdb2 = buildRdb(singleKeyDef, [{ k: weirdKey, val: "b" }], [singleKey]);
     const result = expectSameRow(rdb1, rdb2);
     expect(result.updated).toBe(1);
 
-    const rdb1b = buildRdb(singleKeyDef, [{ k: "a b", val: "a" }], [singleKey]);
-    const rdb2b = buildRdb(singleKeyDef, [{ k: "a c", val: "a" }], [singleKey]);
+    const rdb1b = buildRdb(singleKeyDef, [{ k: "a\u0000b", val: "a" }], [singleKey]);
+    const rdb2b = buildRdb(singleKeyDef, [{ k: "a\u0000c", val: "a" }], [singleKey]);
     expectDistinctRows(rdb1b, rdb2b);
   });
 });
 
 // ---------------------------------------------------------------------------
-// 4.1 / 4.5 compare keyの型制約・重複キー
+// compare keyの型制約・重複キー
 // ---------------------------------------------------------------------------
 
 describe("compare key type restrictions", () => {
@@ -446,7 +445,7 @@ describe("compare key type restrictions", () => {
   });
 });
 
-describe("4.5 duplicate compare key handling", () => {
+describe("duplicate compare key handling", () => {
   const longValue = "x".repeat(500);
 
   describe.each(runners)("%s", (_name, fn) => {
@@ -466,7 +465,7 @@ describe("4.5 duplicate compare key handling", () => {
       expect(result.message).toMatch(/rdh1/);
       expect(result.message).not.toContain(longValue);
 
-      // 重複検出時も非破壊(4.9)
+      // 重複検出時も非破壊
       expect(rdb1.rs).toEqual(before1);
       expect(rdb2.rs).toEqual(before2);
     });
@@ -489,10 +488,10 @@ describe("4.5 duplicate compare key handling", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4.8 アノテーションのテスト
+// アノテーションのテスト
 // ---------------------------------------------------------------------------
 
-describe("4.8 annotations", () => {
+describe("annotations", () => {
   it("preserves existing Cod/Rul/Lnt/Stl/Fil annotations while adding Upd", () => {
     const rdb1 = buildRdb(idValKeys, [{ id: 1, val: "a" }], [primaryCompareKey]);
     const rdb2 = buildRdb(idValKeys, [{ id: 1, val: "b" }], [primaryCompareKey]);
@@ -584,10 +583,10 @@ describe("4.8 annotations", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4.9 非破壊性のテスト
+// 非破壊性のテスト
 // ---------------------------------------------------------------------------
 
-describe("4.9 non-destructive guarantees", () => {
+describe("non-destructive guarantees", () => {
   it("leaves inputs untouched when the compare key error path is taken", () => {
     const rdb1 = buildRdb(idValKeys, [{ id: 1, val: "a" }], []); // compareKeysなし
     const rdb2 = buildRdb(idValKeys, [{ id: 1, val: "a" }], []);
@@ -626,10 +625,10 @@ describe("4.9 non-destructive guarantees", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4.10 asyncDiff固有テスト
+// asyncDiff固有テスト
 // ---------------------------------------------------------------------------
 
-describe("4.10 asyncDiff cancellation", () => {
+describe("asyncDiff cancellation", () => {
   /**
    * cancelTokenのisCancellationRequestedを「n回読み取られた後」からtrueに
    * 切り替えるトークンを作る。asyncDiffの実装はcancelTokenを決まった順序
@@ -746,10 +745,10 @@ describe("4.10 asyncDiff cancellation", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4.11 diffToUndoChanges固有テスト
+// diffToUndoChanges固有テスト
 // ---------------------------------------------------------------------------
 
-describe("4.11 diffToUndoChanges specifics", () => {
+describe("diffToUndoChanges specifics", () => {
   it("UPDATE conditions contain only the compare key columns, and values contain only changed columns", () => {
     const keys: RdhKey[] = [
       createRdhKey({ name: "id", type: GeneralColumnType.INTEGER }),
@@ -844,7 +843,7 @@ describe("4.11 diffToUndoChanges specifics", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4.12 ランダム化・性質テスト
+// ランダム化・性質テスト
 // ---------------------------------------------------------------------------
 
 /** 決定的な擬似乱数生成器(mulberry32)。同じseedなら常に同じ列を生成する。 */
@@ -919,7 +918,7 @@ function referenceDiffCounts(rows1: RandomRow[], rows2: RandomRow[]): Counts {
   return { updated, deleted, inserted };
 }
 
-describe("4.12 randomized matching against an independent reference implementation", () => {
+describe("randomized matching against an independent reference implementation", () => {
   const seeds = [1, 2, 3, 4, 5];
 
   it.each(seeds)("matches a Map-based reference implementation (seed=%i)", async (seed) => {

@@ -1,5 +1,6 @@
 /**
- * misc/full-review-remediation-plan-2026-08-13.md Phase 5 (4.19-4.20) の回帰テスト。
+ * toStringUtil (toCsv/toHtml/toMarkdown/toString) の回帰テスト。
+ * バイナリの16進変換の上限と、列が0件になる場合の表示を対象にする。
  */
 import {
   GeneralColumnType,
@@ -7,7 +8,7 @@ import {
   createRdhKey,
 } from "../src";
 
-describe("4.19 binary hex conversion is capped at 64 bytes", () => {
+describe("binary hex conversion is capped at 64 bytes", () => {
   const buildRdbWithBuffer = (bytes: number): ResultSetDataBuilder => {
     const rdb = new ResultSetDataBuilder([
       createRdhKey({ name: "id", type: GeneralColumnType.INTEGER }),
@@ -76,7 +77,7 @@ describe("4.19 binary hex conversion is capped at 64 bytes", () => {
   });
 });
 
-describe("4.20 empty-key handling", () => {
+describe("empty-key handling", () => {
   it("shows a distinct 'no keys' message when a keyNames filter leaves zero visible columns, even though rows exist", () => {
     const rdb = new ResultSetDataBuilder([
       createRdhKey({ name: "id", type: GeneralColumnType.INTEGER }),

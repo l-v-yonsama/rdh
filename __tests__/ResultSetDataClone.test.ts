@@ -1,7 +1,6 @@
 /**
  * ResultSetDataBuilder.from()(内部的にはResultSetDataClone.tsのcloneRdhValue/
  * cloneFromRdh)のクローン挙動のテスト。
- * misc/full-review-remediation-plan-2026-08-13.md Phase 4 (4.16-4.18)に対応する。
  *
  * 既存の基本的なクローンテスト(Buffer/Date/Set/NaN・Infinity・-0/bigint等)は
  * __tests__/ResultsetDataBuilder.test.ts 側にあるため、ここでは今回追加した

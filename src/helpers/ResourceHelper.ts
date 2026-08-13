@@ -23,8 +23,7 @@ const DIFF_ANNOTATION_TYPES: AnnotationType[] = ["Upd", "Del", "Add"];
 /**
  * asyncDiffが索引構築・行走査の各ループで1回のchunkとして処理する行数。
  * 大きすぎるとイベントループを長く止め、小さすぎるとsetImmediateの呼び出し
- * 回数が増えオーバーヘッドが無視できなくなる。500〜1,000行を目安にする
- * (misc/full-review-remediation-plan-2026-08-13.md 4.4)。
+ * 回数が増えオーバーヘッドが無視できなくなる。500〜1,000行を目安にする。
  */
 const ASYNC_YIELD_CHUNK_SIZE = 500;
 
@@ -44,7 +43,7 @@ type DiffContext =
  * diff/asyncDiff/diffToUndoChanges に共通する準備処理(compareKeyの検証・解決、
  * 比較対象カラムの絞り込み、非破壊クローン)をまとめたもの。行の突合(索引構築・
  * マッチング)はここでは行わない。asyncDiff はそちらを別途キャンセル・yield
- * 対応させる必要があるため(4.3/4.4)。
+ * 対応させる必要があるため。
  */
 function resolveDiffContext(
   rdh1: ResultSetData,
@@ -69,7 +68,7 @@ function resolveDiffContext(
   }
 
   // compareKeyの列自体は、行索引で使う値表現が一意に定まるスカラー型のみ許可
-  // する(4.1)。JSON/ARRAY/SET等のオブジェクト・コレクション値を持ちうる型は、
+  // する。JSON/ARRAY/SET等のオブジェクト・コレクション値を持ちうる型は、
   // 通常の値列としてのdiff対象(supportedKeyNames、下記)からは除外しない。
   const notSupportedCompareKeys = rdb1.rs.keys
     .filter((it) => compareKey.names.includes(it.name))
@@ -131,7 +130,7 @@ function diffRowColumns(
 }
 
 // ---------------------------------------------------------------------------
-// compare keyの値表現・等価判定 (4.1)
+// compare keyの値表現・等価判定
 // ---------------------------------------------------------------------------
 
 /**
@@ -231,7 +230,7 @@ function compareKeyEquals(
 }
 
 // ---------------------------------------------------------------------------
-// 行索引 (4.2)
+// 行索引
 // ---------------------------------------------------------------------------
 
 type RowIndex = Map<string, RdhRow[]>;
@@ -307,7 +306,7 @@ type RowMatchPlan = { ok: true; index2: RowIndex } | { ok: false; message: strin
  * か検証する。compareKeyはPrimary/Uniqueキーであることが前提のため、同じ側に
  * 重複がある場合、どちらの行を突合相手にするべきか一意に決められない。
  * 曖昧な突合を進めるより、どちらの側に重複があるか分かるメッセージ付きで
- * エラーにする(4.5)。値自体は巨大になりうるため、メッセージには含めない。
+ * エラーにする。値自体は巨大になりうるため、メッセージには含めない。
  */
 function prepareRowMatchPlan(
   rows1: RdhRow[],

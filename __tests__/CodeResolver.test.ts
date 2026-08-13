@@ -1,6 +1,5 @@
 /**
  * resolveCodeLabel() のテスト。
- * misc/full-review-remediation-plan-2026-08-13.md Phase 3 (4.13-4.15) に対応する。
  */
 import {
   CodeItem,

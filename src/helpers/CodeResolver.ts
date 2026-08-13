@@ -106,7 +106,7 @@ function findDetailByColumnValue(
   return item.detailByStringCode.get(String(columnValue));
 }
 
-/** 行処理の前に、codeItems設定を1回だけコンパイルする(4.13)。 */
+/** 行処理の前に、codeItems設定を1回だけコンパイルする。 */
 function compileCodeItems(
   codeItems: CodeItem[],
   tableName: string | undefined
@@ -119,7 +119,7 @@ function compileCodeItems(
     }));
 }
 
-/** 列名ごとに適用されるCompiledCodeItemの一覧を1回だけ作る(4.13)。 */
+/** 列名ごとに適用されるCompiledCodeItemの一覧を1回だけ作る。 */
 function buildColumnLookup(
   compiledItems: CompiledCodeItem[],
   columnNames: string[]
@@ -142,7 +142,7 @@ function buildColumnLookup(
  *
  * 解決を始める前に、対象rdh全体の既存"Cod"アノテーションを必ずクリアする。
  * そうしないと、ラベル定義を変更して再実行した際に古いラベルと新しい
- * ラベルが同じセルに両方残ってしまう(2.3)。codeItemsの変更によって
+ * ラベルが同じセルに両方残ってしまう。codeItemsの変更によって
  * 以前は適用されていた設定が適用されなくなった場合でも、古いCod注釈が
  * 残り続けないよう、適用可否を判定するより前にクリアする。
  */
