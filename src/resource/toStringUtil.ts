@@ -76,12 +76,17 @@ abstract class BaseString {
     const { withRowNo, maxPrintLines, eol } = this.params;
     const { rdh } = this;
 
-    if (this.rdhKeys.length < 0) {
-      return this.noKeys();
-    }
-
+    // 行が0件の場合はnoRecordsReason("No records..."等)を優先する。
+    // ResultSetDataBuilder.createEmpty()はkeysもrowsも0件で作られるため、
+    // 順序を逆にすると常に「行がない」ケースまで「列がない」表示に
+    // なってしまう。「列がない」は、行データはあるのにkeyNames絞り込み等で
+    // 表示対象の列が0件になった場合にのみ意味を持つ。
     if (this.rdh.rows.length === 0) {
       return this.noRecords();
+    }
+
+    if (this.rdhKeys.length === 0) {
+      return this.noKeys();
     }
 
     this.createHeaders();
@@ -126,14 +131,24 @@ abstract class BaseString {
     this.retList.push(s);
   }
 
+  /** バイナリを16進文字列へ変換する際に読む最大バイト数。 */
+  static readonly MAX_BINARY_HEX_BYTES = 64;
+
   toHexString = (v: any): string => {
+    // Math.max(byteLength, 64)だと64バイト超の入力では上限が機能せず
+    // (endが常にbyteLength自身になる)、全バイトを変換してしまう。
+    // Math.minで実際に64バイトまでに制限する。
     if (v instanceof Buffer) {
-      return `B'${v.toString("hex", 0, Math.max(v.byteLength, 64))}`;
+      return `B'${v.toString(
+        "hex",
+        0,
+        Math.min(v.byteLength, BaseString.MAX_BINARY_HEX_BYTES)
+      )}`;
     } else if (v instanceof Uint8Array) {
       return `B'${Buffer.from(v).toString(
         "hex",
         0,
-        Math.max(v.byteLength, 64)
+        Math.min(v.byteLength, BaseString.MAX_BINARY_HEX_BYTES)
       )}`;
     }
     return "(BINARY)";
@@ -715,11 +730,12 @@ class PlainString extends BaseString {
     } = this.params;
     const { rdh, rdhKeys, hasKeyComment } = this;
 
-    if (rdhKeys.length < 0) {
-      return "No Keys.";
-    }
+    // BaseString.toString()と同じ理由でrowsの有無を先に判定する。
     if (this.rdh.rows.length === 0) {
       return this.rdh.noRecordsReason ?? "No Records.";
+    }
+    if (rdhKeys.length === 0) {
+      return "No Keys.";
     }
 
     const buf = listit.buffer();
