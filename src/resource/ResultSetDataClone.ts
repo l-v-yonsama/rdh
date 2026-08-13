@@ -52,7 +52,16 @@ function cloneValue<T>(value: T, seen: Cloneable): T {
     return cloned as T;
   }
   if (Buffer.isBuffer(value)) {
-    const cloned = Buffer.from(value);
+    // BufferもUint8Arrayのサブクラスで、buffer/byteOffset/byteLengthを持つ。
+    // Buffer.from(arrayBuffer)はコピーせずarrayBufferをそのまま見る(ゼロ
+    // コピーの)Bufferを作れるため、同じArrayBufferを他のセルが生の
+    // ArrayBufferやTypedArrayとして保持していることがありうる。下のTypedArray/
+    // DataViewと同じくcloneValue(value.buffer, seen)経由でbufferを複製し、
+    // その上にBufferを再構築することで、共有関係とbyteOffsetの両方を保つ
+    // (new Buffer(...)は非推奨のためBuffer.from(buffer, byteOffset,
+    // byteLength)を使う)。
+    const clonedBuffer = cloneValue(value.buffer, seen) as ArrayBuffer;
+    const cloned = Buffer.from(clonedBuffer, value.byteOffset, value.byteLength);
     seen.set(value, cloned);
     return cloned as T;
   }
