@@ -37,6 +37,37 @@ const MAX_CELL_VALUE_LENGTH = 50;
 const MAX_PRINT_LINE = 10;
 const EOL = "\n";
 
+type NumberedRow = { row: RdhRow; rowNo: number };
+
+/**
+ * 表示対象行を「全件」か「先頭+末尾(省略記号つき)」かに選り分ける。
+ * HTML/Markdown/CSV(TabularContentString.toString())とPlainStringの両方が
+ * 同じ選別ロジックを個別に持っていた(4.21)ため、ここへ共通化する。
+ */
+type PrintableRowsPlan =
+  | { truncated: false; rows: NumberedRow[] }
+  | { truncated: true; head: NumberedRow[]; tail: NumberedRow[] };
+
+function selectPrintableRows(
+  rows: RdhRow[],
+  maxPrintLines: number
+): PrintableRowsPlan {
+  if (rows.length <= maxPrintLines) {
+    return {
+      truncated: false,
+      rows: rows.map((row, idx) => ({ row, rowNo: idx + 1 })),
+    };
+  }
+  const numOfHead = Math.ceil(maxPrintLines / 2);
+  const head = rows
+    .slice(0, numOfHead)
+    .map((row, idx) => ({ row, rowNo: idx + 1 }));
+  const tail = rows
+    .slice(rows.length - numOfHead, rows.length)
+    .map((row, idx) => ({ row, rowNo: rows.length - numOfHead + idx + 1 }));
+  return { truncated: true, head, tail };
+}
+
 export const toContentString = (
   rdh: ResultSetData,
   contentType: ContentType,
@@ -54,8 +85,18 @@ export const toContentString = (
   }
 };
 
+/**
+ * 4フォーマット(HTML/Markdown/CSV/Plain)すべてが共有する部分。
+ *
+ * PlainStringはlist-itというテーブル整形ライブラリの都合上、行を1本ずつ
+ * 完成した文字列としてappendしていく他3フォーマットのtoString()テンプレート
+ * メソッド(TabularContentString.toString())には乗らない(list-itは全行を
+ * バッファへ溜めてから列幅を揃えて一括描画するため)。そのためBaseStringは
+ * 「全フォーマット共通のヘルパー」だけを持ち、head/tail描画のtemplate
+ * methodはTabularContentStringへ切り出す(4.21)。PlainStringはBaseStringを
+ * 直接継承し、使わない抽象メソッドを「呼ばれたら例外」で埋める必要がない。
+ */
 abstract class BaseString {
-  readonly retList: string[] = [];
   readonly rdhKeys: RdhKey[];
   readonly hasKeyComment: boolean;
   readonly params: ToStringParam;
@@ -72,63 +113,26 @@ abstract class BaseString {
     this.hasKeyComment = this.rdhKeys.some((k) => !!k.comment);
   }
 
-  toString(): string {
-    const { withRowNo, maxPrintLines, eol } = this.params;
-    const { rdh } = this;
-
-    // 行が0件の場合はnoRecordsReason("No records..."等)を優先する。
-    // ResultSetDataBuilder.createEmpty()はkeysもrowsも0件で作られるため、
-    // 順序を逆にすると常に「行がない」ケースまで「列がない」表示に
-    // なってしまう。「列がない」は、行データはあるのにkeyNames絞り込み等で
-    // 表示対象の列が0件になった場合にのみ意味を持つ。
-    if (this.rdh.rows.length === 0) {
-      return this.noRecords();
-    }
-
-    if (this.rdhKeys.length === 0) {
-      return this.noKeys();
-    }
-
-    this.createHeaders();
-    this.createPreBody();
-
-    if (rdh.rows.length <= maxPrintLines) {
-      rdh.rows.forEach((row, idx) => this.pushRowData(row, idx + 1));
-    } else {
-      const num_of_head = Math.ceil(maxPrintLines / 2);
-      rdh.rows
-        .slice(0, num_of_head)
-        .forEach((row, idx) => this.pushRowData(row, idx + 1));
-      this.pushLine({
-        sRow: withRowNo ? "..." : undefined,
-        abbrRow: true,
-        isHead: false,
-      });
-      rdh.rows
-        .slice(rdh.rows.length - num_of_head, rdh.rows.length)
-        .forEach((row, idx) =>
-          this.pushRowData(row, rdh.rows.length - num_of_head + idx + 1)
-        );
-    }
-
-    this.createPostBody();
-
-    return this.retList.join(eol) + eol;
-  }
-
-  abstract noKeys(): string;
-  abstract noRecords(): string;
-
-  abstract createHeaders(): void;
-  abstract createPreBody(): void;
-  abstract createPostBody(): void;
-
-  abstract pushLine(p: PushLineParams): void;
-
-  abstract pushRowData(row: RdhRow, rowNo: number): void;
-
-  append(s: string): void {
-    this.retList.push(s);
+  /**
+   * withCodeLabel/withRuleViolationの設定を踏まえて、1セル分のコード
+   * ラベル・ルール違反マーカーをまとめて取得する。各フォーマットの行描画
+   * (pushRowData/PlainString.toString())で同じ2行(label取得・ruleMarker
+   * 取得)が重複していた(4.21)ため、ここへ共通化する。
+   */
+  protected resolveCellDecorations(
+    row: RdhRow,
+    keyName: string
+  ): {
+    label: CodeResolvedAnnotation["values"] | undefined;
+    ruleMarker: string | undefined;
+  } {
+    const { withCodeLabel, withRuleViolation } = this.params;
+    return {
+      label: withCodeLabel ? this.resolveCodeLabel(row, keyName) : undefined,
+      ruleMarker: withRuleViolation
+        ? this.resolveRuleMarkers(row, keyName)
+        : undefined,
+    };
   }
 
   /** バイナリを16進文字列へ変換する際に読む最大バイト数。 */
@@ -266,7 +270,69 @@ abstract class BaseString {
   }
 }
 
-class HtmlString extends BaseString {
+/**
+ * 行を1行ずつ完成した文字列としてretListへappendしていく形式(HTML/Markdown/
+ * CSV)が共有するtemplate method。noKeys/noRecords/createHeaders/
+ * createPreBody/createPostBody/pushLine/pushRowDataをサブクラスが実装する。
+ */
+abstract class TabularContentString extends BaseString {
+  readonly retList: string[] = [];
+
+  abstract noKeys(): string;
+  abstract noRecords(): string;
+
+  abstract createHeaders(): void;
+  abstract createPreBody(): void;
+  abstract createPostBody(): void;
+
+  abstract pushLine(p: PushLineParams): void;
+
+  abstract pushRowData(row: RdhRow, rowNo: number): void;
+
+  append(s: string): void {
+    this.retList.push(s);
+  }
+
+  toString(): string {
+    const { withRowNo, maxPrintLines, eol } = this.params;
+    const { rdh } = this;
+
+    // 行が0件の場合はnoRecordsReason("No records..."等)を優先する。
+    // ResultSetDataBuilder.createEmpty()はkeysもrowsも0件で作られるため、
+    // 順序を逆にすると常に「行がない」ケースまで「列がない」表示に
+    // なってしまう。「列がない」は、行データはあるのにkeyNames絞り込み等で
+    // 表示対象の列が0件になった場合にのみ意味を持つ。
+    if (rdh.rows.length === 0) {
+      return this.noRecords();
+    }
+
+    if (this.rdhKeys.length === 0) {
+      return this.noKeys();
+    }
+
+    this.createHeaders();
+    this.createPreBody();
+
+    const plan = selectPrintableRows(rdh.rows, maxPrintLines);
+    if (plan.truncated === false) {
+      plan.rows.forEach(({ row, rowNo }) => this.pushRowData(row, rowNo));
+    } else {
+      plan.head.forEach(({ row, rowNo }) => this.pushRowData(row, rowNo));
+      this.pushLine({
+        sRow: withRowNo ? "..." : undefined,
+        abbrRow: true,
+        isHead: false,
+      });
+      plan.tail.forEach(({ row, rowNo }) => this.pushRowData(row, rowNo));
+    }
+
+    this.createPostBody();
+
+    return this.retList.join(eol) + eol;
+  }
+}
+
+class HtmlString extends TabularContentString {
   constructor(rdh: ResultSetData, params: ToStringParam) {
     super(rdh, params);
   }
@@ -341,7 +407,7 @@ class HtmlString extends BaseString {
 
   pushRowData(row: RdhRow, rowNo: number): void {
     const { rdhKeys } = this;
-    const { withRowNo, withCodeLabel, withRuleViolation } = this.params;
+    const { withRowNo } = this.params;
     let rowClass = "";
     const inserted = RowHelper.hasAnnotation(row, "Add");
     let removed = false;
@@ -360,12 +426,7 @@ class HtmlString extends BaseString {
 
     const retRow = new Array<any>();
     rdhKeys.forEach((key) => {
-      const label = withCodeLabel
-        ? this.resolveCodeLabel(row, key.name)
-        : undefined;
-      const ruleMarker = withRuleViolation
-        ? this.resolveRuleMarkers(row, key.name)
-        : undefined;
+      const { label, ruleMarker } = this.resolveCellDecorations(row, key.name);
 
       let clazz = "";
       if (updated) {
@@ -461,7 +522,7 @@ class HtmlString extends BaseString {
   }
 }
 
-class MarkdownString extends BaseString {
+class MarkdownString extends TabularContentString {
   constructor(rdh: ResultSetData, params: ToStringParam) {
     super(rdh, params);
   }
@@ -528,15 +589,10 @@ class MarkdownString extends BaseString {
 
   pushRowData(row: RdhRow, rowNo: number): void {
     const { rdhKeys } = this;
-    const { withRowNo, withCodeLabel, withRuleViolation } = this.params;
+    const { withRowNo } = this.params;
     const retRow = new Array<any>();
     rdhKeys.forEach((key) => {
-      const label = withCodeLabel
-        ? this.resolveCodeLabel(row, key.name)
-        : undefined;
-      const ruleMarker = withRuleViolation
-        ? this.resolveRuleMarkers(row, key.name)
-        : undefined;
+      const { label, ruleMarker } = this.resolveCellDecorations(row, key.name);
 
       retRow.push(
         this.toMarkdownString(row.values[key.name], {
@@ -599,7 +655,7 @@ class MarkdownString extends BaseString {
   }
 }
 
-class CsvString extends BaseString {
+class CsvString extends TabularContentString {
   private readonly delimiter: string;
   constructor(rdh: ResultSetData, params: ToStringParam) {
     super(rdh, params);
@@ -652,18 +708,13 @@ class CsvString extends BaseString {
 
   pushRowData(row: RdhRow, rowNo: number): void {
     const { rdhKeys, delimiter } = this;
-    const { withRowNo, withCodeLabel, withRuleViolation } = this.params;
+    const { withRowNo } = this.params;
     const rowValues: string[] = [];
     if (withRowNo) {
       rowValues.push(`${rowNo}`);
     }
     rdhKeys.forEach((key) => {
-      const label = withCodeLabel
-        ? this.resolveCodeLabel(row, key.name)
-        : undefined;
-      const ruleMarker = withRuleViolation
-        ? this.resolveRuleMarkers(row, key.name)
-        : undefined;
+      const { label, ruleMarker } = this.resolveCellDecorations(row, key.name);
       rowValues.push(
         this.toCsvString(row.values[key.name], {
           keyType: key.type,
@@ -719,19 +770,12 @@ class PlainString extends BaseString {
   }
 
   toString(): string {
-    const {
-      maxPrintLines,
-      withType,
-      withComment,
-      withRowNo,
-      withCodeLabel,
-      withRuleViolation,
-      eol,
-    } = this.params;
+    const { maxPrintLines, withType, withComment, withRowNo, withRuleViolation, eol } =
+      this.params;
     const { rdh, rdhKeys, hasKeyComment } = this;
 
-    // BaseString.toString()と同じ理由でrowsの有無を先に判定する。
-    if (this.rdh.rows.length === 0) {
+    // TabularContentString.toString()と同じ理由でrowsの有無を先に判定する。
+    if (rdh.rows.length === 0) {
       return this.rdh.noRecordsReason ?? "No Records.";
     }
     if (rdhKeys.length === 0) {
@@ -761,51 +805,28 @@ class PlainString extends BaseString {
       buf.nl();
     }
 
-    if (rdh.rows.length <= maxPrintLines) {
-      rdh.rows.forEach((v, idx) => {
-        if (withRowNo) {
-          buf.d(idx + 1);
-        }
-        rdhKeys.forEach((k) => {
-          const label = withCodeLabel
-            ? this.resolveCodeLabel(v, k.name)
-            : undefined;
-          const ruleMarker = withRuleViolation
-            ? this.resolveRuleMarkers(v, k.name)
-            : undefined;
-          buf.d(
-            this.toShortString(v.values[k.name], {
-              keyType: k.type,
-              label,
-              ruleMarker,
-            })
-          );
-        });
-        buf.nl();
+    const pushDataRow = ({ row, rowNo }: NumberedRow): void => {
+      if (withRowNo) {
+        buf.d(rowNo);
+      }
+      rdhKeys.forEach((k) => {
+        const { label, ruleMarker } = this.resolveCellDecorations(row, k.name);
+        buf.d(
+          this.toShortString(row.values[k.name], {
+            keyType: k.type,
+            label,
+            ruleMarker,
+          })
+        );
       });
+      buf.nl();
+    };
+
+    const plan = selectPrintableRows(rdh.rows, maxPrintLines);
+    if (plan.truncated === false) {
+      plan.rows.forEach(pushDataRow);
     } else {
-      const num_of_head = Math.ceil(maxPrintLines / 2);
-      rdh.rows.slice(0, num_of_head).forEach((v, idx) => {
-        if (withRowNo) {
-          buf.d(idx + 1);
-        }
-        rdhKeys.forEach((k) => {
-          const label = withCodeLabel
-            ? this.resolveCodeLabel(v, k.name)
-            : undefined;
-          const ruleMarker = withRuleViolation
-            ? this.resolveRuleMarkers(v, k.name)
-            : undefined;
-          buf.d(
-            this.toShortString(v.values[k.name], {
-              keyType: k.type,
-              label,
-              ruleMarker,
-            })
-          );
-        });
-        buf.nl();
-      });
+      plan.head.forEach(pushDataRow);
       if (withRowNo) {
         buf.d("...");
       }
@@ -813,34 +834,10 @@ class PlainString extends BaseString {
         buf.d("...");
       });
       buf.nl();
-      rdh.rows
-        .slice(rdh.rows.length - num_of_head, rdh.rows.length)
-        .forEach((v, idx) => {
-          if (withRowNo) {
-            buf.d(rdh.rows.length - num_of_head + idx + 1);
-          }
-          rdhKeys.forEach((k) => {
-            const label = withCodeLabel
-              ? this.resolveCodeLabel(v, k.name)
-              : undefined;
-            const ruleMarker = withRuleViolation
-              ? this.resolveRuleMarkers(v, k.name)
-              : undefined;
-            buf.d(
-              this.toShortString(v.values[k.name], {
-                keyType: k.type,
-                label,
-                ruleMarker,
-              })
-            );
-          });
-          buf.nl();
-        });
+      plan.tail.forEach(pushDataRow);
     }
+
     let s = buf.toString();
-    if (rdh.rows.length === 0) {
-      s += eol + "No records.";
-    }
     if (withRuleViolation) {
       const legend = this.createRuleMarkerLegend(eol);
       if (legend) {
@@ -871,29 +868,5 @@ class PlainString extends BaseString {
       s = `${opt.ruleMarker} ${s}`;
     }
     return s;
-  }
-
-  noKeys(): string {
-    throw new Error("Method not implemented.");
-  }
-  noRecords(): string {
-    throw new Error("Method not implemented.");
-  }
-  createHeaders(): void {
-    throw new Error("Method not implemented.");
-  }
-  createPreBody(): void {
-    throw new Error("Method not implemented.");
-  }
-  createPostBody(): void {
-    throw new Error("Method not implemented.");
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  pushLine(p: PushLineParams): void {
-    throw new Error("Method not implemented.");
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  pushRowData(row: RdhRow, rowNo: number): void {
-    throw new Error("Method not implemented.");
   }
 }
