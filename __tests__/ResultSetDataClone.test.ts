@@ -242,6 +242,58 @@ describe("ResultSetDataBuilder.from() cloning", () => {
     expect(Array.from(cloned)).toEqual([3, 4, 5]);
   });
 
+  it("preserves the shared buffer between a Buffer cell and a raw ArrayBuffer/TypedArray cell viewing the same buffer", () => {
+    // BufferもUint8Arrayのサブクラスであり、buffer/byteOffset/byteLengthを
+    // 持つ。Buffer.from(arrayBuffer)はコピーせずarrayBufferをそのまま見る
+    // (ゼロコピーの)Bufferを作るため、同じarrayBufferを他のセルが生の
+    // ArrayBufferやTypedArrayとして保持していることがありうる。
+    const keys: RdhKey[] = [
+      createRdhKey({ name: "raw", type: GeneralColumnType.JSON }),
+      createRdhKey({ name: "buf", type: GeneralColumnType.BLOB }),
+      createRdhKey({ name: "view8", type: GeneralColumnType.JSON }),
+    ];
+    const source = new ResultSetDataBuilder(keys);
+    const sharedBuffer = new ArrayBuffer(4);
+    const sharedNodeBuffer = Buffer.from(sharedBuffer);
+    const sharedView8 = new Uint8Array(sharedBuffer);
+    source.addRow({ raw: sharedBuffer, buf: sharedNodeBuffer, view8: sharedView8 });
+
+    const copied = ResultSetDataBuilder.from(source);
+    const clonedBuffer = copied.rs.rows[0].values.raw as ArrayBuffer;
+    const clonedNodeBuffer = copied.rs.rows[0].values.buf as Buffer;
+    const clonedView8 = copied.rs.rows[0].values.view8 as Uint8Array;
+
+    expect(Buffer.isBuffer(clonedNodeBuffer)).toBe(true);
+    expect(clonedNodeBuffer).not.toBe(sharedNodeBuffer);
+    expect(clonedNodeBuffer.buffer).toBe(clonedBuffer);
+    expect(clonedView8.buffer).toBe(clonedBuffer);
+
+    // Bufferへの書き込みが、同じbufferを見るUint8Arrayへも反映されること
+    clonedNodeBuffer[0] = 77;
+    expect(clonedView8[0]).toBe(77);
+    // 元のbufferには影響しないこと(非破壊)
+    expect(sharedView8[0]).toBe(0);
+  });
+
+  it("preserves a Buffer's byteOffset when it is a window into a larger shared buffer", () => {
+    const keys: RdhKey[] = [createRdhKey({ name: "b", type: GeneralColumnType.BLOB })];
+    const source = new ResultSetDataBuilder(keys);
+    const buffer = new ArrayBuffer(8);
+    new Uint8Array(buffer).set([1, 2, 3, 4, 5, 6, 7, 8]);
+    // buffer全体ではなく、offset=2から3バイトだけを見るビュー
+    const original = Buffer.from(buffer, 2, 3);
+    source.addRow({ b: original });
+
+    const copied = ResultSetDataBuilder.from(source);
+    const cloned = copied.rs.rows[0].values.b as Buffer;
+
+    expect(Buffer.isBuffer(cloned)).toBe(true);
+    expect(cloned).not.toBe(original);
+    expect(cloned.byteOffset).toBe(2);
+    expect(cloned.byteLength).toBe(3);
+    expect(Array.from(cloned)).toEqual([3, 4, 5]);
+  });
+
   it("clones a circular reference without infinite recursion, preserving the cycle", () => {
     const keys: RdhKey[] = [createRdhKey({ name: "j", type: GeneralColumnType.JSON })];
     const source = new ResultSetDataBuilder(keys);
