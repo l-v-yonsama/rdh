@@ -121,6 +121,40 @@ export function isNotSupportDiffType(type: GC): boolean {
 }
 
 /**
+ * Tests whether `type` is unsupported as a diff **compare key** (Primary/Unique
+ * key) column type. This is intentionally stricter than {@link isNotSupportDiffType}:
+ * it additionally rejects types whose runtime values are typically non-scalar
+ * (JSON/array/object/Set-backed values), because the row-matching index used by
+ * `diff()`/`asyncDiff()`/`diffToUndoChanges()` needs a stable, unambiguous
+ * representation of a compare key value. Regular (non-key) columns of these
+ * types are still fully supported for value-level diffing; only their use as a
+ * Primary/Unique compare key is restricted.
+ *
+ * GC.ENUM is deliberately not included here: it holds a single scalar string
+ * value in practice (unlike GC.SET/STRING_SET/NUMERIC_SET/BINARY_SET, which are
+ * backed by a `Set`), so it is a reasonable compare key column type.
+ * @param type GC
+ * @returns true if `type` must not be used as a compare key column
+ */
+export function isNotSupportCompareKeyType(type: GC): boolean {
+  if (isNotSupportDiffType(type)) {
+    return true;
+  }
+  switch (type) {
+    case GC.JSON:
+    case GC.JSONB:
+    case GC.ARRAY:
+    case GC.SET:
+    case GC.STRING_SET:
+    case GC.NUMERIC_SET:
+    case GC.OBJECT:
+    case GC.VARIANT:
+      return true;
+  }
+  return false;
+}
+
+/**
  * Tests whether type is DATE,TIMESTAMP OR TIMESTAMP_WITH_TIME_ZONE
  * @param type GC
  * @returns true:DATE,TIMESTAMP OR TIMESTAMP_WITH_TIME_ZONE
