@@ -109,6 +109,9 @@ export type ResultSetData = {
   mergeCells?: MergedCell[];
 };
 
+/** asyncDiff()へ渡す、途中キャンセルの問い合わせ用トークン。 */
+export type CancelToken = { isCancellationRequested: boolean };
+
 export type DiffResult = {
   ok: boolean;
   message: string;

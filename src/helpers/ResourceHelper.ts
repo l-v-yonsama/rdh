@@ -9,6 +9,7 @@ import {
 } from "../resource";
 import {
   AnnotationType,
+  CancelToken,
   CompareKey,
   DiffResult,
   DiffToUndoChangesResult,
@@ -26,8 +27,6 @@ const DIFF_ANNOTATION_TYPES: AnnotationType[] = ["Upd", "Del", "Add"];
  * (misc/full-review-remediation-plan-2026-08-13.md 4.4)。
  */
 const ASYNC_YIELD_CHUNK_SIZE = 500;
-
-type CancelToken = { isCancellationRequested: boolean };
 
 type DiffContext =
   | { ok: false; message: string }
