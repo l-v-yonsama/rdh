@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "commonjs",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "lib": ["es7"],
+    "types": ["node"],
     "removeComments": true,
     "esModuleInterop": true,
     "declaration": true,
-    "moduleResolution": "node",
     "rootDir": ".",
     "outDir": "built",
     "allowSyntheticDefaultImports": true,

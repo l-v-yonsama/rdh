@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "commonjs",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "lib": ["es7"],
+    "types": ["node", "jest"],
     "removeComments": true,
     "esModuleInterop": true,
     "declaration": false,
-    "moduleResolution": "node",
     "rootDir": ".",
     "outDir": "built",
     "allowJs": true,
