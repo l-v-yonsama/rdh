@@ -8,6 +8,7 @@ type CompiledCodeItem = {
   matchesColumn: ColumnMatcher;
   detailByStringCode: Map<string, CodeItemDetail>;
   detailByNumericCode: Map<number, CodeItemDetail>;
+  detailByBigIntCode: Map<bigint, CodeItemDetail>;
 };
 
 /** 列名(またはテーブル名)に対するCodeItem.resource.*の一致判定を1回だけコンパイルする。 */
@@ -45,7 +46,7 @@ function matchesTable(
 
 /**
  * detail.code(常にstring)と実際のセル値を比較できるよう、code一覧を
- * 文字列キー・数値キー2つのMapへ事前展開しておく。
+ * 文字列キー・数値キー・bigintキーの3つのMapへ事前展開しておく。
  *
  * 従来は `detail.code == columnValue` という`==`の暗黙型変換に頼っていた。
  * それと同じ結果になるよう、型ごとに明示的なルールへ置き換える
@@ -55,9 +56,11 @@ function matchesTable(
 function compileDetails(details: CodeItemDetail[]): {
   detailByStringCode: Map<string, CodeItemDetail>;
   detailByNumericCode: Map<number, CodeItemDetail>;
+  detailByBigIntCode: Map<bigint, CodeItemDetail>;
 } {
   const detailByStringCode = new Map<string, CodeItemDetail>();
   const detailByNumericCode = new Map<number, CodeItemDetail>();
+  const detailByBigIntCode = new Map<bigint, CodeItemDetail>();
   details.forEach((detail) => {
     if (!detailByStringCode.has(detail.code)) {
       detailByStringCode.set(detail.code, detail);
@@ -66,8 +69,20 @@ function compileDetails(details: CodeItemDetail[]): {
     if (!Number.isNaN(n) && !detailByNumericCode.has(n)) {
       detailByNumericCode.set(n, detail);
     }
+    // BigInt(code)はStringToBigInt相当(空白の除去、先頭+/-、先頭0を許容)で、
+    // `code == columnValue`(columnValueがbigintの場合)が使っていたのと同じ
+    // 変換規則。整数として解釈できないcode(小数点付き等)はBigInt()が
+    // SyntaxErrorを投げるので、そのcodeはbigint照合の対象から外れるだけで
+    // 済むようtry/catchする。
+    try {
+      const b = BigInt(detail.code);
+      if (!detailByBigIntCode.has(b)) {
+        detailByBigIntCode.set(b, detail);
+      }
+      // eslint-disable-next-line no-empty
+    } catch (_e) {}
   });
-  return { detailByStringCode, detailByNumericCode };
+  return { detailByStringCode, detailByNumericCode, detailByBigIntCode };
 }
 
 /**
@@ -77,11 +92,13 @@ function compileDetails(details: CodeItemDetail[]): {
  * - number: `==`はcodeをToNumberしてから比較するため、code側も数値化して
  *   比較する(code:"05"はcolumnValue:5と一致する。NaNになるcodeはどんな
  *   数値とも一致しない)。
+ * - bigint: `==`はcodeをStringToBigIntで変換してから比較するため、code側も
+ *   bigint化して比較する(code:"01"や" 1 "、"+1"もcolumnValue:1nと一致する)。
  * - boolean: `==`はbooleanを先に0/1へ変換してから比較するため、numberと
  *   同じ扱いにする(code:"1"はtrueと一致するが、code:"true"という文字列
  *   は一致しない)。
  * - null/undefined: どのcodeとも一致しない(`==`でも常にfalse)。
- * - それ以外(bigint/Date/オブジェクト等)はcode列挙値としては実運用上
+ * - それ以外(Date/オブジェクト等)はcode列挙値としては実運用上
  *   想定していないため、文字列化した完全一致にフォールバックする。
  */
 function findDetailByColumnValue(
@@ -99,6 +116,9 @@ function findDetailByColumnValue(
       return undefined;
     }
     return item.detailByNumericCode.get(columnValue);
+  }
+  if (typeof columnValue === "bigint") {
+    return item.detailByBigIntCode.get(columnValue);
   }
   if (typeof columnValue === "boolean") {
     return item.detailByNumericCode.get(columnValue ? 1 : 0);
@@ -150,11 +170,16 @@ export const resolveCodeLabel = async (
   rdh: ResultSetData
 ): Promise<boolean> => {
   const { tableName, codeItems } = rdh.meta;
+
+  // codeItemsが空/未設定になった場合(定義そのものが削除された場合)でも、
+  // 前回の解決結果として残っている可能性のある古いCod注釈は必ずクリアする。
+  // このチェックより前にreturnしてしまうと、codeItemsを空にしただけでは
+  // 古いラベルがUIに残り続けてしまう。
+  RdhHelper.clearAnnotationsByType(rdh, "Cod");
+
   if (!codeItems || codeItems.length === 0) {
     return false;
   }
-
-  RdhHelper.clearAnnotationsByType(rdh, "Cod");
 
   const compiledItems = compileCodeItems(codeItems, tableName);
   const columnNames = rdh.keys.map((it) => it.name);

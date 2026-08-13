@@ -47,19 +47,28 @@ function cloneValue<T>(value: T, seen: Cloneable): T {
   }
 
   if (value instanceof Date) {
-    return new Date(value.getTime()) as T;
+    const cloned = new Date(value.getTime());
+    seen.set(value, cloned);
+    return cloned as T;
   }
   if (Buffer.isBuffer(value)) {
-    return Buffer.from(value) as T;
+    const cloned = Buffer.from(value);
+    seen.set(value, cloned);
+    return cloned as T;
   }
   if (value instanceof ArrayBuffer) {
-    return value.slice(0) as T;
+    const cloned = value.slice(0);
+    seen.set(value, cloned);
+    return cloned as T;
   }
   if (ArrayBuffer.isView(value)) {
     // Uint8Array等のTypedArray、およびDataView。Bufferは上のBuffer.isBuffer()
     // 分岐で先に処理されるためここには来ない。
+    // DataViewは元のbuffer全体ではなく、byteOffset/byteLengthで指定された
+    // 範囲だけを見るビューなので、複製後もその範囲を保つ必要がある
+    // (buffer.slice(0)だけでは常にoffset=0・長さ=buffer全体になってしまう)。
     const cloned = isDataView(value)
-      ? new DataView(value.buffer.slice(0))
+      ? new DataView(value.buffer.slice(0), value.byteOffset, value.byteLength)
       : cloneTypedArray(value);
     seen.set(value, cloned);
     return cloned as T;

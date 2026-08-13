@@ -83,6 +83,34 @@ function resolveDiffContext(
     };
   }
 
+  // compareKeyの存在確認をrdh1だけで済ませていると、rdh2に同名の列が
+  // なかった場合、その列の値が全行undefinedになり、行数によって「1行なら
+  // 成功、2行以上ならDuplicate compare keyで失敗」のように振る舞いが不安定
+  // になる。rdh2側でも列の存在と型を検証し、原因のわかるメッセージで
+  // 早期に失敗させる。
+  const rdb2Keynames = rdb2.keynames();
+  const missingInRdh2 = compareKey.names.filter(
+    (name) => !rdb2Keynames.includes(name)
+  );
+  if (missingInRdh2.length) {
+    return {
+      ok: false,
+      message: `Missing compare key (${missingInRdh2.join(", ")}) in rdh2.`,
+    };
+  }
+  const notSupportedCompareKeysInRdh2 = rdb2.rs.keys
+    .filter((it) => compareKey.names.includes(it.name))
+    .filter((it) => isNotSupportCompareKeyType(it.type));
+  if (notSupportedCompareKeysInRdh2.length) {
+    const keys = notSupportedCompareKeysInRdh2
+      .map((it) => `${it.name}: ${displayGeneralColumnType(it.type)}`)
+      .join(",");
+    return {
+      ok: false,
+      message: `Not supported compare keys in rdh2 (${keys}).`,
+    };
+  }
+
   const supportedKeyNames = rdb1.rs.keys
     .filter((it) => !isNotSupportDiffType(it.type))
     .map((it) => it.name);
@@ -238,22 +266,39 @@ type RowIndex = Map<string, RdhRow[]>;
 type IndexBuildResult = { index: RowIndex; hasDuplicates: boolean };
 
 /**
- * compareKeyの値ごとに行をグルーピングする。バケットを配列にしているのは、
- * 万一エンコード結果が衝突しても実値をcompareKeyEqualsで再確認できるように
- * するためと、同じバケットに2行以上入った場合に不正な重複Primary/Unique
+ * 1行をindexへ追加する。バケットを配列にしているのは、万一エンコード結果が
+ * 衝突しても実値をcompareKeyEqualsで再確認できるようにするためと、同じ
+ * バケットに実値まで等しい行が2行以上入った場合に不正な重複Primary/Unique
  * キーを検出できるようにするため。
+ *
+ * エンコードだけが衝突して実値は異なる場合(例: getTime()がNaNになる
+ * Invalid Date同士は、compareKeyのエンコード上は同じ文字列になるが、
+ * comparePartEqualsでは互いに等しくない)は重複として扱わない。バケットへは
+ * 追加するので索引としては引き続き機能する。
+ *
+ * @returns このバケット内に実値まで等しい行が既にあった場合はtrue
  */
+function indexRow(index: RowIndex, row: RdhRow, keynames: string[]): boolean {
+  const key = encodeCompareKey(keynames, row);
+  const bucket = index.get(key);
+  if (bucket) {
+    const isDuplicate = bucket.some((existing) =>
+      compareKeyEquals(keynames, existing, row)
+    );
+    bucket.push(row);
+    return isDuplicate;
+  }
+  index.set(key, [row]);
+  return false;
+}
+
+/** compareKeyの値ごとに行をグルーピングする。 */
 function indexRows(rows: RdhRow[], keynames: string[]): IndexBuildResult {
   const index: RowIndex = new Map();
   let hasDuplicates = false;
   for (const row of rows) {
-    const key = encodeCompareKey(keynames, row);
-    const bucket = index.get(key);
-    if (bucket) {
-      bucket.push(row);
+    if (indexRow(index, row, keynames)) {
       hasDuplicates = true;
-    } else {
-      index.set(key, [row]);
     }
   }
   return { index, hasDuplicates };
@@ -275,14 +320,8 @@ async function indexRowsAsync(
     if (cancelToken?.isCancellationRequested) {
       return "cancelled";
     }
-    const row = rows[i];
-    const key = encodeCompareKey(keynames, row);
-    const bucket = index.get(key);
-    if (bucket) {
-      bucket.push(row);
+    if (indexRow(index, rows[i], keynames)) {
       hasDuplicates = true;
-    } else {
-      index.set(key, [row]);
     }
     await maybeYield(i, chunkSize);
   }
