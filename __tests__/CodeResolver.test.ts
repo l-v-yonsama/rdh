@@ -130,6 +130,29 @@ describe("resolveCodeLabel", () => {
     ).toHaveLength(0);
   });
 
+  it("clears stale Cod annotations when codeItems itself is removed (set to empty/undefined)", async () => {
+    const keys: RdhKey[] = [createRdhKey({ name: "status", type: GeneralColumnType.TEXT })];
+    const rdb = buildRdb(keys, [{ status: "A" }], [
+      {
+        title: "v1",
+        resource: { column: { regex: false, pattern: "status" } },
+        details: [{ code: "A", label: "old-label" }],
+      },
+    ]);
+    await resolveCodeLabel(rdb.rs);
+    expect(
+      RowHelper.filterAnnotationByKeyOf(rdb.rs.rows[0], "status", "Cod")
+    ).toHaveLength(1);
+
+    rdb.rs.meta.codeItems = [];
+    const resolved = await resolveCodeLabel(rdb.rs);
+
+    expect(resolved).toBe(false);
+    expect(
+      RowHelper.filterAnnotationByKeyOf(rdb.rs.rows[0], "status", "Cod")
+    ).toHaveLength(0);
+  });
+
   describe("0 / false / empty string / null / undefined handling", () => {
     it("0 gets a real label when a matching code exists, but no annotation at all when it doesn't (falsy fallback is skipped)", async () => {
       const keys: RdhKey[] = [
@@ -234,6 +257,87 @@ describe("resolveCodeLabel", () => {
 
       expect(RowHelper.getFirstAnnotationOf(rdb.rs.rows[0], "n", "Cod")).toBeUndefined();
       expect(RowHelper.getFirstAnnotationOf(rdb.rs.rows[0], "u", "Cod")).toBeUndefined();
+    });
+  });
+
+  describe("bigint column values", () => {
+    it("matches a bigint value against a plain-integer code (same as == coercion)", async () => {
+      const keys: RdhKey[] = [createRdhKey({ name: "n", type: GeneralColumnType.BIGINT })];
+      const rdb = buildRdb(keys, [{ n: BigInt(1) }], [
+        {
+          title: "codes",
+          resource: { column: { regex: false, pattern: "n" } },
+          details: [{ code: "1", label: "One" }],
+        },
+      ]);
+
+      await resolveCodeLabel(rdb.rs);
+
+      expect(
+        RowHelper.getFirstAnnotationOf(rdb.rs.rows[0], "n", "Cod")?.values
+      ).toEqual({ label: "One", isUndefined: false });
+    });
+
+    it('matches a bigint value against codes written with leading zeros, whitespace, or a leading "+" (as `==` did)', async () => {
+      // 各列を別々のCodeItemにする: 同じCodeItem内に"01"/" 1 "/"+1"を同居させると、
+      // いずれも同じbigint値(1n)へ正規化されるため、compileDetails()の
+      // 「先勝ち」ルールで最初の1つ以外はマップに登録されず、テストの意図
+      // (3つのコード表記それぞれが単独でも1nに一致すること)を確認できない。
+      const keys: RdhKey[] = [
+        createRdhKey({ name: "zero_padded", type: GeneralColumnType.BIGINT }),
+        createRdhKey({ name: "whitespace", type: GeneralColumnType.BIGINT }),
+        createRdhKey({ name: "plus_signed", type: GeneralColumnType.BIGINT }),
+      ];
+      const rdb = buildRdb(
+        keys,
+        [{ zero_padded: BigInt(1), whitespace: BigInt(1), plus_signed: BigInt(1) }],
+        [
+          {
+            title: "zero-padded",
+            resource: { column: { regex: false, pattern: "zero_padded" } },
+            details: [{ code: "01", label: "zero-padded-match" }],
+          },
+          {
+            title: "whitespace",
+            resource: { column: { regex: false, pattern: "whitespace" } },
+            details: [{ code: " 1 ", label: "whitespace-match" }],
+          },
+          {
+            title: "plus-signed",
+            resource: { column: { regex: false, pattern: "plus_signed" } },
+            details: [{ code: "+1", label: "plus-signed-match" }],
+          },
+        ]
+      );
+
+      await resolveCodeLabel(rdb.rs);
+
+      expect(
+        RowHelper.getFirstAnnotationOf(rdb.rs.rows[0], "zero_padded", "Cod")?.values
+      ).toEqual({ label: "zero-padded-match", isUndefined: false });
+      expect(
+        RowHelper.getFirstAnnotationOf(rdb.rs.rows[0], "whitespace", "Cod")?.values
+      ).toEqual({ label: "whitespace-match", isUndefined: false });
+      expect(
+        RowHelper.getFirstAnnotationOf(rdb.rs.rows[0], "plus_signed", "Cod")?.values
+      ).toEqual({ label: "plus-signed-match", isUndefined: false });
+    });
+
+    it("falls back to Undefined for a bigint value with no matching code", async () => {
+      const keys: RdhKey[] = [createRdhKey({ name: "n", type: GeneralColumnType.BIGINT })];
+      const rdb = buildRdb(keys, [{ n: BigInt(999) }], [
+        {
+          title: "codes",
+          resource: { column: { regex: false, pattern: "n" } },
+          details: [{ code: "1", label: "One" }],
+        },
+      ]);
+
+      await resolveCodeLabel(rdb.rs);
+
+      expect(
+        RowHelper.getFirstAnnotationOf(rdb.rs.rows[0], "n", "Cod")?.values
+      ).toEqual({ label: "Undefined", isUndefined: true });
     });
   });
 

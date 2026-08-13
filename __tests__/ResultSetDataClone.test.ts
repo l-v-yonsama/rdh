@@ -16,7 +16,7 @@ import {
   setOf,
 } from "../src";
 
-describe("ResultSetDataBuilder.from() cloning (Phase 4)", () => {
+describe("ResultSetDataBuilder.from() cloning", () => {
   it("clones a raw Uint8Array value as a distinct Uint8Array with the same bytes", () => {
     const keys: RdhKey[] = [createRdhKey({ name: "b", type: GeneralColumnType.BINARY })];
     const source = new ResultSetDataBuilder(keys);
@@ -93,6 +93,31 @@ describe("ResultSetDataBuilder.from() cloning (Phase 4)", () => {
     expect(new Uint8Array(cloned)[0]).toBe(1);
   });
 
+  it("clones a DataView that is a window into a larger buffer, preserving byteOffset/byteLength", () => {
+    const keys: RdhKey[] = [createRdhKey({ name: "dv", type: GeneralColumnType.JSON })];
+    const source = new ResultSetDataBuilder(keys);
+    const buffer = new ArrayBuffer(8);
+    new Uint8Array(buffer).set([1, 2, 3, 4, 5, 6, 7, 8]);
+    // buffer全体ではなく、offset=2から3バイトだけを見るビュー
+    const original = new DataView(buffer, 2, 3);
+    source.addRow({ dv: original });
+
+    const copied = ResultSetDataBuilder.from(source);
+    const cloned = copied.rs.rows[0].values.dv as DataView;
+
+    expect(cloned instanceof DataView).toBe(true);
+    expect(cloned).not.toBe(original);
+    expect(cloned.byteOffset).toBe(2);
+    expect(cloned.byteLength).toBe(3);
+    // originalはbuffer[2..5) = [3,4,5]を指す
+    expect(cloned.getUint8(0)).toBe(3);
+    expect(cloned.getUint8(1)).toBe(4);
+    expect(cloned.getUint8(2)).toBe(5);
+
+    new Uint8Array(buffer)[2] = 99;
+    expect(cloned.getUint8(0)).toBe(3);
+  });
+
   it("clones deeply nested combinations of Map/Set/Array/Date/Buffer inside a JSON value", () => {
     const keys: RdhKey[] = [createRdhKey({ name: "j", type: GeneralColumnType.JSON })];
     const source = new ResultSetDataBuilder(keys);
@@ -138,6 +163,30 @@ describe("ResultSetDataBuilder.from() cloning (Phase 4)", () => {
     // 同じオブジェクトへの2つの参照は、複製後も同じクローンを指す
     expect(clonedBHolder).toBe(clonedA);
   });
+
+  it.each([
+    ["Date", (): unknown => new Date("2024-01-01T00:00:00.000Z")],
+    ["Buffer", (): unknown => Buffer.from([1, 2, 3])],
+    ["ArrayBuffer", (): unknown => new ArrayBuffer(4)],
+  ])(
+    "preserves shared-reference identity for a %s referenced from two cells",
+    (_label, makeShared) => {
+      const keys: RdhKey[] = [
+        createRdhKey({ name: "a", type: GeneralColumnType.JSON }),
+        createRdhKey({ name: "b", type: GeneralColumnType.JSON }),
+      ];
+      const source = new ResultSetDataBuilder(keys);
+      const shared = makeShared();
+      source.addRow({ a: shared, b: { holder: shared } });
+
+      const copied = ResultSetDataBuilder.from(source);
+      const clonedA = copied.rs.rows[0].values.a;
+      const clonedBHolder = (copied.rs.rows[0].values.b as { holder: unknown }).holder;
+
+      expect(clonedA).not.toBe(shared);
+      expect(clonedBHolder).toBe(clonedA);
+    }
+  );
 
   it("clones a circular reference without infinite recursion, preserving the cycle", () => {
     const keys: RdhKey[] = [createRdhKey({ name: "j", type: GeneralColumnType.JSON })];
