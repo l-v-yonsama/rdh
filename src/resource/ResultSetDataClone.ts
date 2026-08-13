@@ -64,12 +64,23 @@ function cloneValue<T>(value: T, seen: Cloneable): T {
   if (ArrayBuffer.isView(value)) {
     // Uint8Array等のTypedArray、およびDataView。Bufferは上のBuffer.isBuffer()
     // 分岐で先に処理されるためここには来ない。
-    // DataViewは元のbuffer全体ではなく、byteOffset/byteLengthで指定された
-    // 範囲だけを見るビューなので、複製後もその範囲を保つ必要がある
-    // (buffer.slice(0)だけでは常にoffset=0・長さ=buffer全体になってしまう)。
+    //
+    // value.bufferは複製せず素通りさせるのではなく、必ずcloneValue(...)
+    // 経由で複製する。単純にvalue.buffer.slice(0)すると、同じArrayBufferを
+    // 複数のView(や、ArrayBuffer自身が別セルの値としても格納されている
+    // 場合)が共有していても、複製後はそれぞれ独立したbufferになって
+    // しまい、一方への書き込みが他方へ反映されなくなる。cloneValueは
+    // ArrayBufferもseenへ登録するため、既に複製済みの同じbufferがあれば
+    // それを再利用でき、共有関係を保てる。
+    //
+    // DataViewもTypedArrayも、元のbuffer全体ではなくbyteOffset/長さで
+    // 指定された範囲だけを見るビューなので、複製後もその範囲を保つ必要が
+    // ある(bufferを複製するだけでは常にoffset=0・長さ=buffer全体の
+    // ビューになってしまう)。
+    const clonedBuffer = cloneValue(value.buffer, seen) as ArrayBuffer;
     const cloned = isDataView(value)
-      ? new DataView(value.buffer.slice(0), value.byteOffset, value.byteLength)
-      : cloneTypedArray(value);
+      ? new DataView(clonedBuffer, value.byteOffset, value.byteLength)
+      : cloneTypedArrayView(value, clonedBuffer);
     seen.set(value, cloned);
     return cloned as T;
   }
@@ -119,9 +130,24 @@ function isDataView(value: ArrayBufferView): value is DataView {
   return value instanceof DataView;
 }
 
-function cloneTypedArray<T extends ArrayBufferView>(value: T): T {
-  const TypedArrayCtor = value.constructor as new (src: T) => T;
-  return new TypedArrayCtor(value);
+/**
+ * TypedArray(Uint8Array等)を、複製済みのbuffer上のビューとして再構築する。
+ * `new TypedArrayCtor(value)`(配列的な値コピー)ではなく、buffer/byteOffset/
+ * length(要素数。DataViewのbyteLengthとは異なりバイト数ではない点に注意)を
+ * 明示的に指定するコンストラクタ形を使うことで、同じbufferを見る他の
+ * View/ArrayBufferとの共有関係と、元のbyteOffsetをともに保つ。
+ */
+function cloneTypedArrayView<T extends ArrayBufferView>(
+  value: T,
+  clonedBuffer: ArrayBuffer
+): T {
+  const TypedArrayCtor = value.constructor as new (
+    buffer: ArrayBuffer,
+    byteOffset: number,
+    length: number
+  ) => T;
+  const length = (value as unknown as { length: number }).length;
+  return new TypedArrayCtor(clonedBuffer, value.byteOffset, length);
 }
 
 /** prototypeを見て「素のオブジェクトリテラル相当」かどうかを判定する。 */
