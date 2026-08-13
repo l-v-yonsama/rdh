@@ -249,9 +249,9 @@ describe("ResultSetDataBuilder", () => {
           "truthy",
           "variety",
         ],
-        [, 3.5, 1.4, 0.2, "TRUE", "Setosa"],
-        [4.7, , 1.3, 0.2, "FALSE", "Setosa"],
-        [7, 3.2, 4.7, , "True", "Versicolor"],
+        [undefined, 3.5, 1.4, 0.2, "TRUE", "Setosa"],
+        [4.7, undefined, 1.3, 0.2, "FALSE", "Setosa"],
+        [7, 3.2, 4.7, undefined, "True", "Versicolor"],
       ];
 
       const rdb = ResultSetDataBuilder.from(CSV, { firstRowAsTitle: true });
