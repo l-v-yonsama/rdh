@@ -1,121 +1,34 @@
-import dayjs from "dayjs";
 import * as ss from "simple-statistics";
 import {
   AnnotationType,
-  CellAnnotation,
   GeneralColumnType as GC,
   RdhKey,
   RdhMeta,
   RdhRow,
   RdhRowMeta,
   ResultSetData,
-  RuleAnnotation,
-  TableRuleDetail,
   ToStringParam,
   isResultSetData,
 } from "../types";
-import isDate, { getUniqObjectKeys, isRecord, toBoolean } from "../utils";
+import isDate, { isRecord, toBoolean } from "../utils";
 import {
-  isArray,
   isBooleanLike,
-  isDateTimeOrDate,
   isDateTimeOrDateOrTime,
-  isEnumOrSet,
   isNumericLike,
   isTextLike,
 } from "./GeneralColumnUtil";
+import { RowHelper } from "./RdhAnnotationHelper";
+import { createRdhKey } from "./RdhKeyBuilder";
 import { cloneFromRdh } from "./ResultSetDataClone";
 import { toContentString } from "./toStringUtil";
 
-export function createRdhKey({
-  name,
-  comment,
-  type,
-  width,
-  required,
-  align,
-  meta,
-}: {
-  name: string;
-  comment?: string;
-  type?: GC;
-  width?: number;
-  required?: boolean;
-  align?: RdhKey["align"];
-  meta?: RdhKey["meta"];
-}): RdhKey {
-  if (align === undefined) {
-    if (isNumericLike(type)) {
-      align = "right";
-    } else if (isTextLike(type) || isEnumOrSet(type) || isArray(type)) {
-      align = "left";
-    }
-  }
-
-  const key: RdhKey = {
-    name,
-    type: type ?? GC.UNKNOWN,
-    comment,
-    width,
-    required,
-    align,
-    meta,
-  };
-
-  return key;
-}
-
-export function createRdhKeysOf(list: any[]): RdhKey[] {
-  if (list.length === 0) return [];
-
-  // 推論用: 値からGeneralColumnTypeを返す
-  const inferType = (value: any): GC | undefined => {
-    if (value === null) return GC.NULL;
-    if (value === undefined) return undefined;
-    if (typeof value === "bigint") return GC.BIGINT;
-    if (typeof value === "boolean") return GC.BOOLEAN;
-    if (typeof value === "number") return GC.NUMERIC;
-    if (typeof value === "string") return GC.TEXT;
-    if (typeof value === "object") {
-      if (isDate(value)) return GC.DATE;
-      return GC.JSON;
-    }
-    return GC.UNKNOWN;
-  };
-
-  const fieldNames = getUniqObjectKeys(list);
-
-  return fieldNames.map((name) => {
-    let detectedType = inferType(list[0][name]);
-
-    for (let i = 1; i < list.length; i++) {
-      const currentType = inferType(list[i][name]);
-
-      if (currentType === undefined) {
-        // 無視して前の型を維持
-        continue;
-      }
-      if (currentType === GC.NULL) {
-        // nullは型推論に影響しない
-        if (detectedType === undefined) {
-          detectedType = currentType;
-        }
-        continue;
-      }
-      if (detectedType === undefined || detectedType === GC.NULL) {
-        detectedType = currentType;
-        continue;
-      }
-      if (detectedType !== currentType) {
-        // 型が混在している場合はUNKNOWNにする
-        detectedType = GC.UNKNOWN;
-        break;
-      }
-    }
-
-    return createRdhKey({ name, type: detectedType });
-  });
-}
+// このファイルはpackage公開時にbuilt/src全体がそのまま配布され、exportsに
+// よる経路制限もない。そのため過去にここからdeep importしていた利用者が
+// いる可能性を考慮し、RdhAnnotationHelper.ts／RdhKeyBuilder.tsへ移動した
+// createRdhKey・createRdhKeysOf・RowHelper・RdhHelperをこの場所からも
+// 引き続き参照できるよう再exportしておく。
+export { RowHelper, RdhHelper } from "./RdhAnnotationHelper";
+export { createRdhKey, createRdhKeysOf } from "./RdhKeyBuilder";
 
 export function isResultSetDataBuilder(
   item: unknown
@@ -133,155 +46,82 @@ function toRdhKeys(keys: Array<string | RdhKey>): RdhKey[] {
   });
 }
 
-export class RowHelper {
-  static getRuleEngineValues(row: RdhRow, keys: RdhKey[]): Record<string, any> {
-    const ret: Record<string, any> = {};
-    keys.forEach((key) => {
-      const v = row.values[key.name];
-      if (isDateTimeOrDate(key.type)) {
-        if (v === null || v === undefined) {
-          ret[key.name] = v;
-        } else {
-          ret[key.name] = dayjs(v).valueOf();
-        }
-      } else {
-        ret[key.name] = v;
-      }
-    });
-    return ret;
-  }
-
-  static pushAnnotation(
-    row: RdhRow,
-    key: string,
-    annotation: CellAnnotation
-  ): void {
-    if (row.meta[key] === undefined) {
-      row.meta[key] = new Array<CellAnnotation>();
-    }
-    row.meta[key].push(annotation);
-  }
-
-  static getFirstAnnotationOf<T extends CellAnnotation = CellAnnotation>(
-    row: RdhRow,
-    key: string,
-    type: T["type"]
-  ): T | undefined {
-    if (row.meta[key]) {
-      const annotations = row.meta[key];
-      if (annotations) {
-        return annotations.find((a) => a.type === type) as T;
-      }
-    }
-    return undefined;
-  }
-
-  static filterAnnotationOf<T extends CellAnnotation = CellAnnotation>(
-    row: RdhRow,
-    type: T["type"]
-  ): { [key: string]: T[] } {
-    const keys = Object.keys(row.meta);
-    return keys
-      .filter((key) => row.meta[key].some((it) => it.type === type))
-      .reduce((p, key) => {
-        const obj: Record<string, T[]> = {
-          ...p,
-        };
-        obj[key] = row.meta[key].filter((it) => it.type === type) as T[];
-        return obj;
-      }, {});
-  }
-
-  static filterAnnotationByKeyOf<T extends CellAnnotation = CellAnnotation>(
-    row: RdhRow,
-    key: string,
-    type: T["type"]
-  ): T[] {
-    if (row.meta[key]) {
-      const annotations = row.meta[key];
-      return (annotations?.filter((a) => a.type === type) ?? []) as T[];
-    }
-    return [];
-  }
-
-  static clearAllAnnotations(row: RdhRow): void {
-    Object.keys(row.meta).forEach((key) => {
-      delete row.meta[key];
-    });
-  }
-
-  static clearAnnotationByType(
-    row: RdhRow,
-    type: AnnotationType | AnnotationType[]
-  ): void {
-    const types = Array.isArray(type) ? type : [type];
-    const meta_keys = Object.keys(row.meta);
-    if (meta_keys.length > 0) {
-      for (let i = 0; i < meta_keys.length; i++) {
-        const annotations = row.meta[meta_keys[i]];
-        if (!annotations) {
-          continue;
-        }
-        for (let j = 0; j < annotations.length; j++) {
-          if (types.includes(annotations[j].type)) {
-            annotations.splice(j, 1);
-            j--;
-          }
-        }
-      }
-    }
-  }
-
-  static hasAnyAnnotation(row: RdhRow, types: AnnotationType[]): boolean {
-    if (row.meta && types.length) {
-      return (
-        Object.values(row.meta)
-          ?.flat()
-          ?.some((it) => types.includes(it.type)) ?? false
-      );
-    }
-    return false;
-  }
-
-  static hasAnnotation(row: RdhRow, type: AnnotationType): boolean {
-    return this.hasAnyAnnotation(row, [type]);
-  }
-
-  static hasRuleAnnotation(row: RdhRow, ruleDetail: TableRuleDetail): boolean {
-    if (row.meta && row.meta[ruleDetail.error.column]) {
-      const v = row.meta[ruleDetail.error.column];
-      return v.some(
-        (it) => it.type === "Rul" && it.values.name === ruleDetail.ruleName
-      );
-    }
-    return false;
-  }
-
-  static getFirstRuleAnnotation(
-    row: RdhRow,
-    ruleDetail: TableRuleDetail
-  ): RuleAnnotation | undefined {
-    if (row.meta && row.meta[ruleDetail.error.column]) {
-      const v = row.meta[ruleDetail.error.column];
-      return v.find(
-        (it) => it.type === "Rul" && it.values.name === ruleDetail.ruleName
-      ) as RuleAnnotation;
-    }
-    return undefined;
-  }
+// クローン本体(値のディープクローン、JSON経由で平坦化されたDate/Bufferの復元、
+// addRow相当の列正規化)はcloneFromRdh()(ResultSetDataClone.ts)が行う。
+// from(list: any, ...)は引数の型がanyで、isResultSetData()による判定も
+// created/keys/rows/metaの有無を見る構造的なチェックのみ(値の中身が本物の
+// Date/Bufferかどうかは見ない)ため、「JSON整形済みのプレーンオブジェクトを
+// from()に渡す」という使い方自体はこのAPIの型上禁止されていない。ここでは
+// そのプレーンなResultSetDataをBuilderへ包むだけ。
+function fromResultSetData(rs: ResultSetData): ResultSetDataBuilder {
+  const cloned = cloneFromRdh(rs);
+  const rdb = new ResultSetDataBuilder(cloned.keys);
+  rdb.rs.rows.push(...cloned.rows);
+  Object.keys(cloned.meta ?? {}).forEach((key) => {
+    rdb.rs.meta[key] = cloned.meta[key];
+  });
+  (rdb.rs as any)["created"] = cloned.created;
+  (rdb.rs as any)["noRecordsReason"] = cloned.noRecordsReason;
+  rdb.rs.sqlStatement = cloned.sqlStatement;
+  rdb.rs.summary = cloned.summary;
+  rdb.rs.shuffledIndexes = cloned.shuffledIndexes;
+  rdb.rs.shuffledNextCounter = cloned.shuffledNextCounter;
+  rdb.rs.mergeCells = cloned.mergeCells;
+  rdb.rs.queryConditions = cloned.queryConditions;
+  return rdb;
 }
 
-export class RdhHelper {
-  static clearAllAnotations(rdh: ResultSetData): void {
-    rdh.rows.forEach((row) => RowHelper.clearAllAnnotations(row));
+// 2次元配列(1行目をtitleとして扱うかはoptions次第)からBuilderを組み立てる。
+function fromArrayRows(
+  rows: any[][],
+  options?: { firstRowAsTitle?: boolean }
+): ResultSetDataBuilder {
+  const strTitles: string[] = [];
+
+  let elm = rows[0];
+  if (options?.firstRowAsTitle) {
+    strTitles.push(...elm);
+  } else {
+    let i = strTitles.length + 1;
+    while (strTitles.length < elm.length) {
+      strTitles.push(`K${i++}`);
+    }
   }
 
-  static clearAnnotationsByType(
-    rdh: ResultSetData,
-    type: AnnotationType | AnnotationType[]
-  ): void {
-    rdh.rows.forEach((row) => RowHelper.clearAnnotationByType(row, type));
+  const ret = new ResultSetDataBuilder(strTitles);
+
+  for (let r = options?.firstRowAsTitle ? 1 : 0; r < rows.length; r++) {
+    elm = rows[r];
+    const values: any = {};
+    for (let c = 0; c < elm.length; c++) {
+      values[strTitles[c]] = elm[c];
+    }
+    ret.addRow(values);
   }
+  return ret;
+}
+
+// object(Record)を KEY/TYPE/VALUE の3列RDHへ変換する。
+function fromRecord(record: Record<string, any>): ResultSetDataBuilder {
+  const ret = new ResultSetDataBuilder([
+    createRdhKey({ name: "KEY", type: GC.TEXT, width: 120 }),
+    createRdhKey({ name: "TYPE", type: GC.TEXT, width: 80 }),
+    createRdhKey({ name: "VALUE", type: GC.JSON, width: 400 }),
+  ]);
+  Object.keys(record).forEach((k: string) => {
+    const v = record[k];
+    let type: string = typeof v;
+    if (v === null) {
+      type = "null";
+    }
+    const values: any = {};
+    values["KEY"] = k;
+    values["TYPE"] = type;
+    values["VALUE"] = v;
+
+    ret.addRow(values);
+  });
+  return ret;
 }
 
 export class ResultSetDataBuilder {
@@ -379,36 +219,12 @@ export class ResultSetDataBuilder {
     if (list === undefined || list === null || list === "") {
       throw new Error(typeof list + " has no value.");
     }
-    // クローン本体(値のディープクローン、JSON経由で平坦化されたDate/Bufferの
-    // 復元、addRow相当の列正規化)はcloneFromRdh()(ResultSetDataClone.ts)が
-    // 行う。from(list: any, ...)は引数の型がanyで、isResultSetData()による
-    // 判定もcreated/keys/rows/metaの有無を見る構造的なチェックのみ(値の中身が
-    // 本物のDate/Bufferかどうかは見ない)ため、「JSON整形済みのプレーン
-    // オブジェクトをfrom()に渡す」という使い方自体はこのAPIの型上禁止され
-    // ていない。ここではそのプレーンなResultSetDataをBuilderへ包むだけ。
-    const wrapAsBuilder = (obj: ResultSetData): ResultSetDataBuilder => {
-      const cloned = cloneFromRdh(obj);
-      const rdb = new ResultSetDataBuilder(cloned.keys);
-      rdb.rs.rows.push(...cloned.rows);
-      Object.keys(cloned.meta ?? {}).forEach((key) => {
-        rdb.rs.meta[key] = cloned.meta[key];
-      });
-      (rdb.rs as any)["created"] = cloned.created;
-      (rdb.rs as any)["noRecordsReason"] = cloned.noRecordsReason;
-      rdb.rs.sqlStatement = cloned.sqlStatement;
-      rdb.rs.summary = cloned.summary;
-      rdb.rs.shuffledIndexes = cloned.shuffledIndexes;
-      rdb.rs.shuffledNextCounter = cloned.shuffledNextCounter;
-      rdb.rs.mergeCells = cloned.mergeCells;
-      rdb.rs.queryConditions = cloned.queryConditions;
-      return rdb;
-    };
 
     if (isResultSetData(list)) {
-      return wrapAsBuilder(list);
+      return fromResultSetData(list);
     }
     if (isResultSetDataBuilder(list)) {
-      return wrapAsBuilder(list.rs);
+      return fromResultSetData(list.rs);
     }
 
     const t = typeof list;
@@ -419,63 +235,14 @@ export class ResultSetDataBuilder {
       if (list.length === 0) {
         throw new Error("No records");
       }
-      const strTitles: string[] = [];
-
-      let elm = list[0];
+      const elm = list[0];
       if (elm instanceof Array) {
-        if (options?.firstRowAsTitle) {
-          strTitles.push(...elm);
-        } else {
-          let i = strTitles.length + 1;
-          while (strTitles.length < elm.length) {
-            strTitles.push(`K${i++}`);
-          }
-        }
-
-        ret = new ResultSetDataBuilder(strTitles);
-
-        for (let r = options?.firstRowAsTitle ? 1 : 0; r < list.length; r++) {
-          elm = list[r];
-          const values: any = {};
-          for (let c = 0; c < elm.length; c++) {
-            values[strTitles[c]] = elm[c];
-          }
-          ret.addRow(values);
-        }
+        ret = fromArrayRows(list, options);
       }
     } else {
       switch (t) {
         case "object":
-          ret = new ResultSetDataBuilder([
-            createRdhKey({
-              name: "KEY",
-              type: GC.TEXT,
-              width: 120,
-            }),
-            createRdhKey({
-              name: "TYPE",
-              type: GC.TEXT,
-              width: 80,
-            }),
-            createRdhKey({
-              name: "VALUE",
-              type: GC.JSON,
-              width: 400,
-            }),
-          ]);
-          Object.keys(list).forEach((k: string) => {
-            const v = list[k];
-            let type: string = typeof v;
-            if (v === null) {
-              type = "null";
-            }
-            const values: any = {};
-            values["KEY"] = k;
-            values["TYPE"] = type;
-            values["VALUE"] = v;
-
-            ret.addRow(values);
-          });
+          ret = fromRecord(list);
           break;
       }
     }

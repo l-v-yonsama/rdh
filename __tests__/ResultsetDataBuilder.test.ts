@@ -464,6 +464,13 @@ describe("ResultSetDataBuilder", () => {
       expect(keys[0].type).toBe(GeneralColumnType.DATE);
     });
 
+    it("should detect JSON type for plain objects", () => {
+      const list = [{ payload: { a: 1 } }, { payload: { b: 2 } }];
+      const keys = createRdhKeysOf(list);
+      // Should detect JSON type
+      expect(keys[0].type).toBe(GeneralColumnType.JSON);
+    });
+
     it("should infer types for multiple keys", () => {
       const list = [
         { a: 1, b: "x", c: true },

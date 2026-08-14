@@ -19,5 +19,9 @@ module.exports = {
     '!src/**/*.d.ts',
     '!src/**/*.d.mts',
   ],
-  testPathIgnorePatterns: ['/__tests__/data', '/__tests__/setup'],
+  testPathIgnorePatterns: [
+    '/__tests__/data',
+    '/__tests__/setup',
+    '/__tests__/diff/diffTestSupport',
+  ],
 };
