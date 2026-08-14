@@ -4,6 +4,7 @@ import type { CompareKey } from "./CompareKey";
 import type { GeneralColumnType } from "./GeneralColumnType";
 import type { QueryConditions } from "./QueryConditions";
 import type { TableRule } from "./Rules";
+import { isRecord } from "../../utils/base";
 
 export type RdhMeta = {
   connectionName?: string;
@@ -140,5 +141,13 @@ export type DiffToUndoChangesResult = {
   }[];
 };
 
-export const isResultSetData = (item: any): item is ResultSetData =>
-  item.created && item.keys && item.rows && item.meta;
+export const isResultSetData = (item: unknown): item is ResultSetData =>
+  isRecord(item) &&
+  "created" in item &&
+  !!item.created &&
+  "keys" in item &&
+  !!item.keys &&
+  "rows" in item &&
+  !!item.rows &&
+  "meta" in item &&
+  !!item.meta;

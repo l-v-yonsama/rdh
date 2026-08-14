@@ -14,7 +14,7 @@ import {
   ToStringParam,
   isResultSetData,
 } from "../types";
-import isDate, { getUniqObjectKeys, toBoolean } from "../utils";
+import isDate, { getUniqObjectKeys, isRecord, toBoolean } from "../utils";
 import {
   isArray,
   isBooleanLike,
@@ -118,9 +118,9 @@ export function createRdhKeysOf(list: any[]): RdhKey[] {
 }
 
 export function isResultSetDataBuilder(
-  item: any
+  item: unknown
 ): item is ResultSetDataBuilder {
-  return item.rs && isResultSetData(item.rs);
+  return isRecord(item) && "rs" in item && isResultSetData(item.rs);
 }
 
 function toRdhKeys(keys: Array<string | RdhKey>): RdhKey[] {

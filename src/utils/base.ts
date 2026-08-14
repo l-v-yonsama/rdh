@@ -1,5 +1,8 @@
 import dayjs from "dayjs";
 
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
 export function castTo<T>(o: unknown): T {
   return o as T;
 }
