@@ -487,7 +487,7 @@ function createDiffAnnotationHandlers(
   supportedKeyNames: string[]
 ): MatchHandlers {
   return {
-    onMatched: (row1, row2) => {
+    onMatched: (row1, row2): void => {
       const changed = diffRowColumns(row1, row2, supportedKeyNames);
       changed.forEach(({ name, v1, v2 }) => {
         result.updatedColumns++;
@@ -504,7 +504,7 @@ function createDiffAnnotationHandlers(
         result.updated++;
       }
     },
-    onRemoved: (row1) => {
+    onRemoved: (row1): void => {
       if (supportedKeyNames.length) {
         supportedKeyNames.forEach((name) => {
           RowHelper.pushAnnotation(row1, name, { type: "Del" });
@@ -512,7 +512,7 @@ function createDiffAnnotationHandlers(
         result.deleted++;
       }
     },
-    onInserted: (row2) => {
+    onInserted: (row2): void => {
       keynames.forEach((name) => {
         RowHelper.pushAnnotation(row2, name, { type: "Add" });
       });

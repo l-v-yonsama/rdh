@@ -14,7 +14,7 @@ describe("asyncDiff cancellation", () => {
   function cancelAfterChecks(n: number): { isCancellationRequested: boolean } {
     let count = 0;
     return {
-      get isCancellationRequested() {
+      get isCancellationRequested(): boolean {
         count++;
         return count > n;
       },

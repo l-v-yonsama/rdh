@@ -80,9 +80,12 @@ export const runners: [
   string,
   (a: ResultSetData, b: ResultSetData) => Promise<DiffResult | DiffToUndoChangesResult> | (DiffResult | DiffToUndoChangesResult),
 ][] = [
-  ["diff", (a, b) => diff(a, b)],
-  ["asyncDiff", (a, b) => asyncDiff(a, b)],
-  ["diffToUndoChanges", (a, b) => diffToUndoChanges(a, b)],
+  ["diff", (a, b): DiffResult => diff(a, b)],
+  ["asyncDiff", (a, b): Promise<DiffResult> => asyncDiff(a, b)],
+  [
+    "diffToUndoChanges",
+    (a, b): DiffToUndoChangesResult => diffToUndoChanges(a, b),
+  ],
 ];
 
 // ---------------------------------------------------------------------------

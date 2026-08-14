@@ -239,7 +239,7 @@ describe("ResultSetDataBuilder", () => {
       );
     });
 
-    it("empty string should be null", () => {
+    it("undefined values should render as NULL", () => {
       const CSV: any[][] = [
         [
           "sepal.length",
@@ -255,7 +255,17 @@ describe("ResultSetDataBuilder", () => {
       ];
 
       const rdb = ResultSetDataBuilder.from(CSV, { firstRowAsTitle: true });
-      console.log(rdb.toMarkdown({ withType: true }));
+      const markdown = rdb.toMarkdown({ withType: true });
+
+      expect(markdown).toContain(
+        "| `NULL` | 3.5 | 1.4 | 0.2 | true | Setosa |"
+      );
+      expect(markdown).toContain(
+        "| 4.7 | `NULL` | 1.3 | 0.2 | false | Setosa |"
+      );
+      expect(markdown).toContain(
+        "| 7 | 3.2 | 4.7 | `NULL` | true | Versicolor |"
+      );
     });
   });
 
