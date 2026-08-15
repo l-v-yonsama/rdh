@@ -37,9 +37,8 @@ export const toBoolean = (
   if (typeof s === "boolean") {
     return s;
   }
-  if (s instanceof Buffer) {
-    const buf = s as Buffer;
-    return buf.at(0) === 1;
+  if (Buffer.isBuffer(s)) {
+    return s.at(0) === 1;
   }
   if (s.trim().length === 0) {
     return undefined;

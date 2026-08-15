@@ -1,6 +1,7 @@
 {
   "name": "@l-v-yonsama/rdh",
   "version": "1.0.0",
+  "packageManager": "npm@10.9.4",
   "description": "Database resultset data holder in TypeScript.",
   "engines": {
     "node": ">= 18"
@@ -9,7 +10,7 @@
     "@types/jest": "~29.2",
     "@types/json-rules-engine": "^4.1.0",
     "@types/lodash.isequal": "^4.5.6",
-    "@types/node": "~18",
+    "@types/node": "22.18.10",
     "@typescript-eslint/eslint-plugin": "~8.67",
     "@typescript-eslint/parser": "~8.67",
     "eslint": "~8.57",
@@ -47,7 +48,8 @@
     "simple-statistics": "^7.8.3"
   },
   "volta": {
-    "node": "18.12.1"
+    "node": "22.21.1",
+    "npm": "10.9.4"
   },
   "main": "built/src/index.js",
   "types": "built/src/index.d.ts",
