@@ -135,3 +135,6 @@ dist
 
 # misc
 /misc
+
+# Local Claude Code settings
+.claude/
