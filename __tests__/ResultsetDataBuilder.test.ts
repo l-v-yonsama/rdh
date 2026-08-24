@@ -504,4 +504,121 @@ describe("ResultSetDataBuilder", () => {
       );
     });
   });
+
+  describe("setSummary", () => {
+    const createBuilder = (): ResultSetDataBuilder =>
+      new ResultSetDataBuilder([
+        createRdhKey({ name: "n1", type: GeneralColumnType.INTEGER }),
+      ]);
+
+    it("keeps the existing write-path summary shape when no additive fields are given", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 1000,
+        affectedRows: 2,
+        insertId: 5,
+        changedRows: 2,
+      });
+      expect(rdb.rs.summary).toEqual({
+        info: "2 rows affected (1.00 sec)",
+        elapsedTimeMilli: 1000,
+        insertId: 5,
+        affectedRows: 2,
+        changedRows: 2,
+        capacityUnits: undefined,
+        scannedRows: undefined,
+        requestCount: undefined,
+        retryCount: undefined,
+        readCapacityUnits: undefined,
+        writeCapacityUnits: undefined,
+        hasMoreRows: undefined,
+      });
+    });
+
+    it("keeps the existing select-path summary shape when no additive fields are given", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 500,
+        selectedRows: 1,
+      });
+      expect(rdb.rs.summary).toEqual({
+        info: "1 row in set (0.50 sec)",
+        elapsedTimeMilli: 500,
+        selectedRows: 1,
+        capacityUnits: undefined,
+        scannedRows: undefined,
+        requestCount: undefined,
+        retryCount: undefined,
+        readCapacityUnits: undefined,
+        writeCapacityUnits: undefined,
+        hasMoreRows: undefined,
+      });
+    });
+
+    it("does not treat scannedRows: 0 as missing", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 0,
+        scannedRows: 0,
+      });
+      expect(rdb.rs.summary.scannedRows).toBe(0);
+    });
+
+    it("retains request/retry/read/write capacity fields, including zero values", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 3,
+        requestCount: 2,
+        retryCount: 1,
+        readCapacityUnits: 4.5,
+        writeCapacityUnits: 0,
+      });
+      expect(rdb.rs.summary.requestCount).toBe(2);
+      expect(rdb.rs.summary.retryCount).toBe(1);
+      expect(rdb.rs.summary.readCapacityUnits).toBe(4.5);
+      expect(rdb.rs.summary.writeCapacityUnits).toBe(0);
+    });
+
+    it("retains hasMoreRows for both true and false", () => {
+      const truthy = createBuilder();
+      truthy.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 100,
+        hasMoreRows: true,
+      });
+      expect(truthy.rs.summary.hasMoreRows).toBe(true);
+
+      const falsy = createBuilder();
+      falsy.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 1,
+        hasMoreRows: false,
+      });
+      expect(falsy.rs.summary.hasMoreRows).toBe(false);
+    });
+
+    it("still appends the CU suffix to info when capacityUnits is set, unaffected by additive fields", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 5,
+        capacityUnits: 2.5,
+        scannedRows: 50,
+        requestCount: 1,
+      });
+      expect(rdb.rs.summary.info).toBe("5 rows in set (0.01 sec) CU (2.5)");
+    });
+
+    it("does not append a CU suffix when capacityUnits is undefined", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 5,
+        scannedRows: 50,
+      });
+      expect(rdb.rs.summary.info).toBe("5 rows in set (0.01 sec)");
+    });
+  });
 });

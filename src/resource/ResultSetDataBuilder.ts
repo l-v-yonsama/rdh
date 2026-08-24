@@ -549,6 +549,12 @@ export class ResultSetDataBuilder {
     insertId,
     changedRows,
     capacityUnits,
+    scannedRows,
+    requestCount,
+    retryCount,
+    readCapacityUnits,
+    writeCapacityUnits,
+    hasMoreRows,
   }: {
     elapsedTimeMilli: number;
     selectedRows?: number;
@@ -556,6 +562,12 @@ export class ResultSetDataBuilder {
     insertId?: number;
     changedRows?: number;
     capacityUnits?: number;
+    scannedRows?: number;
+    requestCount?: number;
+    retryCount?: number;
+    readCapacityUnits?: number;
+    writeCapacityUnits?: number;
+    hasMoreRows?: boolean;
   }): void {
     const elapsedTime = (elapsedTimeMilli / 1000).toFixed(2);
 
@@ -570,6 +582,12 @@ export class ResultSetDataBuilder {
         affectedRows: affectedRows,
         changedRows: changedRows,
         capacityUnits,
+        scannedRows,
+        requestCount,
+        retryCount,
+        readCapacityUnits,
+        writeCapacityUnits,
+        hasMoreRows,
       };
     } else {
       // select
@@ -580,6 +598,12 @@ export class ResultSetDataBuilder {
         elapsedTimeMilli,
         selectedRows,
         capacityUnits,
+        scannedRows,
+        requestCount,
+        retryCount,
+        readCapacityUnits,
+        writeCapacityUnits,
+        hasMoreRows,
       };
     }
     if (capacityUnits !== undefined) {

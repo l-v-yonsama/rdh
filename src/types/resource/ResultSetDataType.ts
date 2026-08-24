@@ -94,6 +94,15 @@ export type RdhSummary = {
   insertId?: number;
   changedRows?: number;
   capacityUnits?: number;
+  // Additive fields for stores (e.g. DynamoDB) whose read cost is not fully
+  // described by selectedRows/capacityUnits alone. All optional; absent for
+  // resources that don't produce this evidence.
+  scannedRows?: number;
+  requestCount?: number;
+  retryCount?: number;
+  readCapacityUnits?: number;
+  writeCapacityUnits?: number;
+  hasMoreRows?: boolean;
 };
 
 export type ResultSetData = {
