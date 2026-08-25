@@ -87,6 +87,11 @@ export type RdhRow = {
 };
 
 export type RdhSummary = {
+  // Display text for Query Result-style headings. Callers usually leave
+  // ResultSetDataBuilder.setSummary() to generate the default RDB-oriented
+  // "N rows in set (...)"/"N rows affected (...)" text; a caller with
+  // store-specific display rules (e.g. DynamoDB) can instead pass its own
+  // `info` and have it stored verbatim.
   info: string;
   elapsedTimeMilli: number;
   selectedRows?: number;

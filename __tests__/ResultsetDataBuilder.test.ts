@@ -620,5 +620,64 @@ describe("ResultSetDataBuilder", () => {
       });
       expect(rdb.rs.summary.info).toBe("5 rows in set (0.01 sec)");
     });
+
+    it("uses the caller-supplied info verbatim for a select when provided", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        info: "38 items returned • 90 ms • Capacity not reported",
+        elapsedTimeMilli: 90,
+        selectedRows: 38,
+      });
+      expect(rdb.rs.summary.info).toBe(
+        "38 items returned • 90 ms • Capacity not reported"
+      );
+    });
+
+    it("uses the caller-supplied info verbatim for a write when provided", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        info: "1 item written • 12 ms • 1 WCU",
+        elapsedTimeMilli: 12,
+        affectedRows: 1,
+      });
+      expect(rdb.rs.summary.info).toBe("1 item written • 12 ms • 1 WCU");
+    });
+
+    it("does not append an automatic CU suffix when info is supplied, even if capacityUnits is set", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        info: "5 items returned • 10 ms • 2.5 RCU",
+        elapsedTimeMilli: 10,
+        selectedRows: 5,
+        capacityUnits: 2.5,
+      });
+      expect(rdb.rs.summary.info).toBe("5 items returned • 10 ms • 2.5 RCU");
+    });
+
+    it("keeps all structured fields alongside a caller-supplied info", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        info: "25 returned / 100 evaluated • 42 ms • 1.5 RCU • 25% pass",
+        elapsedTimeMilli: 42,
+        selectedRows: 25,
+        scannedRows: 100,
+        requestCount: 1,
+        retryCount: 0,
+        readCapacityUnits: 1.5,
+        hasMoreRows: false,
+      });
+      expect(rdb.rs.summary).toEqual({
+        info: "25 returned / 100 evaluated • 42 ms • 1.5 RCU • 25% pass",
+        elapsedTimeMilli: 42,
+        selectedRows: 25,
+        capacityUnits: undefined,
+        scannedRows: 100,
+        requestCount: 1,
+        retryCount: 0,
+        readCapacityUnits: 1.5,
+        writeCapacityUnits: undefined,
+        hasMoreRows: false,
+      });
+    });
   });
 });

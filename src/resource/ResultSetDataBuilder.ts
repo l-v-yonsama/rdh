@@ -543,6 +543,7 @@ export class ResultSetDataBuilder {
   }
 
   setSummary({
+    info,
     elapsedTimeMilli,
     selectedRows,
     affectedRows,
@@ -556,6 +557,14 @@ export class ResultSetDataBuilder {
     writeCapacityUnits,
     hasMoreRows,
   }: {
+    // Caller-supplied display text for RdhSummary.info. When omitted, the
+    // existing RDB-oriented "N rows in set (...)"/"N rows affected (...)"
+    // text is generated as before (backward compatible for RDB, Redis,
+    // Memcached, etc. callers). When provided (e.g. by a DynamoDB-specific
+    // formatter), it is used verbatim and the automatic " CU (...)" suffix
+    // below is skipped - the caller's formatter is expected to already
+    // include any Capacity text it wants shown.
+    info?: string;
     elapsedTimeMilli: number;
     selectedRows?: number;
     affectedRows?: number;
@@ -574,9 +583,11 @@ export class ResultSetDataBuilder {
     if (selectedRows === undefined) {
       // insert, update, delete
       this.rs.summary = {
-        info: `${affectedRows} row${
-          affectedRows === 1 ? "" : "s"
-        } affected (${elapsedTime} sec)`,
+        info:
+          info ??
+          `${affectedRows} row${
+            affectedRows === 1 ? "" : "s"
+          } affected (${elapsedTime} sec)`,
         elapsedTimeMilli,
         insertId: insertId,
         affectedRows: affectedRows,
@@ -592,9 +603,11 @@ export class ResultSetDataBuilder {
     } else {
       // select
       this.rs.summary = {
-        info: `${selectedRows} row${
-          selectedRows === 1 ? "" : "s"
-        } in set (${elapsedTime} sec)`,
+        info:
+          info ??
+          `${selectedRows} row${
+            selectedRows === 1 ? "" : "s"
+          } in set (${elapsedTime} sec)`,
         elapsedTimeMilli,
         selectedRows,
         capacityUnits,
@@ -606,7 +619,7 @@ export class ResultSetDataBuilder {
         hasMoreRows,
       };
     }
-    if (capacityUnits !== undefined) {
+    if (info === undefined && capacityUnits !== undefined) {
       this.rs.summary.info += ` CU (${capacityUnits})`;
     }
   }
