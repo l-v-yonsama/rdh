@@ -2,6 +2,7 @@ import * as ss from "simple-statistics";
 import {
   AnnotationType,
   GeneralColumnType as GC,
+  RdhDynamoDbSummary,
   RdhKey,
   RdhMeta,
   RdhRow,
@@ -550,12 +551,7 @@ export class ResultSetDataBuilder {
     insertId,
     changedRows,
     capacityUnits,
-    scannedRows,
-    requestCount,
-    retryCount,
-    readCapacityUnits,
-    writeCapacityUnits,
-    hasMoreRows,
+    dynamoDb,
   }: {
     // Caller-supplied display text for RdhSummary.info. When omitted, the
     // existing RDB-oriented "N rows in set (...)"/"N rows affected (...)"
@@ -571,12 +567,9 @@ export class ResultSetDataBuilder {
     insertId?: number;
     changedRows?: number;
     capacityUnits?: number;
-    scannedRows?: number;
-    requestCount?: number;
-    retryCount?: number;
-    readCapacityUnits?: number;
-    writeCapacityUnits?: number;
-    hasMoreRows?: boolean;
+    // DynamoDB API execution evidence. Stored verbatim under
+    // RdhSummary.dynamoDb; not produced or interpreted for other vendors.
+    dynamoDb?: RdhDynamoDbSummary;
   }): void {
     const elapsedTime = (elapsedTimeMilli / 1000).toFixed(2);
 
@@ -593,12 +586,7 @@ export class ResultSetDataBuilder {
         affectedRows: affectedRows,
         changedRows: changedRows,
         capacityUnits,
-        scannedRows,
-        requestCount,
-        retryCount,
-        readCapacityUnits,
-        writeCapacityUnits,
-        hasMoreRows,
+        dynamoDb,
       };
     } else {
       // select
@@ -611,12 +599,7 @@ export class ResultSetDataBuilder {
         elapsedTimeMilli,
         selectedRows,
         capacityUnits,
-        scannedRows,
-        requestCount,
-        retryCount,
-        readCapacityUnits,
-        writeCapacityUnits,
-        hasMoreRows,
+        dynamoDb,
       };
     }
     if (info === undefined && capacityUnits !== undefined) {

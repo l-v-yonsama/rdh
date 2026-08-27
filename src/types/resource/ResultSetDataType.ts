@@ -86,6 +86,55 @@ export type RdhRow = {
   readonly values: { [key: string]: any };
 };
 
+// Per-scope DynamoDB Capacity Unit amounts, as reported by
+// ConsumedCapacity.Table / .LocalSecondaryIndexes / .GlobalSecondaryIndexes.
+export type RdhDynamoDbCapacityAmount = {
+  capacityUnits?: number;
+  readCapacityUnits?: number;
+  writeCapacityUnits?: number;
+};
+
+// Consumed Capacity breakdown for one DynamoDB Query/Scan/ExecuteStatement
+// execution (possibly across multiple paginated responses, already summed).
+export type RdhDynamoDbConsumedCapacity = {
+  totalCapacityUnits?: number;
+  totalReadCapacityUnits?: number;
+  totalWriteCapacityUnits?: number;
+  table?: RdhDynamoDbCapacityAmount;
+  localSecondaryIndexes?: Record<string, RdhDynamoDbCapacityAmount>;
+  globalSecondaryIndexes?: Record<string, RdhDynamoDbCapacityAmount>;
+};
+
+// DynamoDB-specific execution evidence for one Query/Scan/ExecuteStatement,
+// namespaced so the meaning and scope of each value stay unambiguous. This
+// is the single source of truth for DynamoDB API telemetry; it does not
+// mirror or replace the generic selectedRows/capacityUnits fields below.
+export type RdhDynamoDbSummary = {
+  apiOperation: "Query" | "Scan" | "ExecuteStatement";
+
+  // Item count adopted into the response after Filter was applied.
+  // For native Query/Scan, the sum of Count across all paginated responses.
+  returnedItemCount?: number;
+
+  // Item count DynamoDB evaluated before Filter was applied.
+  // Sum of ScannedCount across all paginated responses for native
+  // Query/Scan. Left undefined for ExecuteStatement.
+  evaluatedItemCount?: number;
+
+  // Number of successful paginated responses. Does not include SDK retries.
+  successfulResponseCount?: number;
+
+  // Additional attempts derived from the AWS SDK's response metadata.
+  sdkRetryCount?: number;
+
+  // Whether a LastEvaluatedKey/NextToken remained when execution stopped.
+  // This only means the later key range was not evaluated - it does not
+  // guarantee a matching item exists there.
+  continuationTokenPresent?: boolean;
+
+  consumedCapacity?: RdhDynamoDbConsumedCapacity;
+};
+
 export type RdhSummary = {
   // Display text for Query Result-style headings. Callers usually leave
   // ResultSetDataBuilder.setSummary() to generate the default RDB-oriented
@@ -99,15 +148,9 @@ export type RdhSummary = {
   insertId?: number;
   changedRows?: number;
   capacityUnits?: number;
-  // Additive fields for stores (e.g. DynamoDB) whose read cost is not fully
-  // described by selectedRows/capacityUnits alone. All optional; absent for
-  // resources that don't produce this evidence.
-  scannedRows?: number;
-  requestCount?: number;
-  retryCount?: number;
-  readCapacityUnits?: number;
-  writeCapacityUnits?: number;
-  hasMoreRows?: boolean;
+  // DynamoDB API execution evidence, namespaced separately from the
+  // generic fields above. See RdhDynamoDbSummary for field meanings.
+  dynamoDb?: RdhDynamoDbSummary;
 };
 
 export type ResultSetData = {
