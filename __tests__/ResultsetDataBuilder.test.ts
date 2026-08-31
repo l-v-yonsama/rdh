@@ -580,6 +580,27 @@ describe("ResultSetDataBuilder", () => {
       ).toBe(0);
     });
 
+    it("retains the structured DynamoDB access path", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 3,
+        dynamoDb: {
+          apiOperation: "Query",
+          accessPath: {
+            type: "index",
+            indexName: "tenant-status-gsi",
+            indexType: "GSI",
+          },
+        },
+      });
+      expect(rdb.rs.summary.dynamoDb?.accessPath).toEqual({
+        type: "index",
+        indexName: "tenant-status-gsi",
+        indexType: "GSI",
+      });
+    });
+
     it("retains dynamoDb.continuationTokenPresent for both true and false", () => {
       const truthy = createBuilder();
       truthy.setSummary({

@@ -105,12 +105,27 @@ export type RdhDynamoDbConsumedCapacity = {
   globalSecondaryIndexes?: Record<string, RdhDynamoDbCapacityAmount>;
 };
 
+// The DynamoDB structure used to read the result. An index type can be
+// unknown when a custom endpoint executes a valid request but does not expose
+// complete DescribeTable metadata.
+export type RdhDynamoDbAccessPath =
+  | { type: "table" }
+  | {
+      type: "index";
+      indexName: string;
+      indexType?: "LSI" | "GSI";
+    };
+
 // DynamoDB-specific execution evidence for one Query/Scan/ExecuteStatement,
 // namespaced so the meaning and scope of each value stay unambiguous. This
 // is the single source of truth for DynamoDB API telemetry; it does not
 // mirror or replace the generic selectedRows/capacityUnits fields below.
 export type RdhDynamoDbSummary = {
   apiOperation: "Query" | "Scan" | "ExecuteStatement";
+
+  // Table or secondary index used by this operation. Kept as structured
+  // evidence so consumers do not need to parse RdhSummary.info or query text.
+  accessPath?: RdhDynamoDbAccessPath;
 
   // Item count adopted into the response after Filter was applied.
   // For native Query/Scan, the sum of Count across all paginated responses.
