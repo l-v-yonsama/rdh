@@ -504,4 +504,225 @@ describe("ResultSetDataBuilder", () => {
       );
     });
   });
+
+  describe("setSummary", () => {
+    const createBuilder = (): ResultSetDataBuilder =>
+      new ResultSetDataBuilder([
+        createRdhKey({ name: "n1", type: GeneralColumnType.INTEGER }),
+      ]);
+
+    it("keeps the existing write-path summary shape when no additive fields are given", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 1000,
+        affectedRows: 2,
+        insertId: 5,
+        changedRows: 2,
+      });
+      expect(rdb.rs.summary).toEqual({
+        info: "2 rows affected (1.00 sec)",
+        elapsedTimeMilli: 1000,
+        insertId: 5,
+        affectedRows: 2,
+        changedRows: 2,
+        capacityUnits: undefined,
+        dynamoDb: undefined,
+      });
+    });
+
+    it("keeps the existing select-path summary shape when no additive fields are given", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 500,
+        selectedRows: 1,
+      });
+      expect(rdb.rs.summary).toEqual({
+        info: "1 row in set (0.50 sec)",
+        elapsedTimeMilli: 500,
+        selectedRows: 1,
+        capacityUnits: undefined,
+        dynamoDb: undefined,
+      });
+    });
+
+    it("does not treat dynamoDb.evaluatedItemCount: 0 as missing", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 0,
+        dynamoDb: { apiOperation: "Query", evaluatedItemCount: 0 },
+      });
+      expect(rdb.rs.summary.dynamoDb?.evaluatedItemCount).toBe(0);
+    });
+
+    it("retains dynamoDb response/retry/capacity fields, including zero values", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 3,
+        dynamoDb: {
+          apiOperation: "Query",
+          successfulResponseCount: 2,
+          sdkRetryCount: 1,
+          consumedCapacity: {
+            totalReadCapacityUnits: 4.5,
+            totalWriteCapacityUnits: 0,
+          },
+        },
+      });
+      expect(rdb.rs.summary.dynamoDb?.successfulResponseCount).toBe(2);
+      expect(rdb.rs.summary.dynamoDb?.sdkRetryCount).toBe(1);
+      expect(
+        rdb.rs.summary.dynamoDb?.consumedCapacity?.totalReadCapacityUnits
+      ).toBe(4.5);
+      expect(
+        rdb.rs.summary.dynamoDb?.consumedCapacity?.totalWriteCapacityUnits
+      ).toBe(0);
+    });
+
+    it("retains the structured DynamoDB access path", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 3,
+        dynamoDb: {
+          apiOperation: "Query",
+          accessPath: {
+            type: "index",
+            indexName: "tenant-status-gsi",
+            indexType: "GSI",
+          },
+        },
+      });
+      expect(rdb.rs.summary.dynamoDb?.accessPath).toEqual({
+        type: "index",
+        indexName: "tenant-status-gsi",
+        indexType: "GSI",
+      });
+    });
+
+    it("retains dynamoDb.continuationTokenPresent for both true and false", () => {
+      const truthy = createBuilder();
+      truthy.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 100,
+        dynamoDb: { apiOperation: "Query", continuationTokenPresent: true },
+      });
+      expect(truthy.rs.summary.dynamoDb?.continuationTokenPresent).toBe(true);
+
+      const falsy = createBuilder();
+      falsy.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 1,
+        dynamoDb: { apiOperation: "Query", continuationTokenPresent: false },
+      });
+      expect(falsy.rs.summary.dynamoDb?.continuationTokenPresent).toBe(false);
+    });
+
+    it("still appends the CU suffix to info when capacityUnits is set, unaffected by dynamoDb", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 5,
+        capacityUnits: 2.5,
+        dynamoDb: {
+          apiOperation: "Query",
+          evaluatedItemCount: 50,
+          successfulResponseCount: 1,
+        },
+      });
+      expect(rdb.rs.summary.info).toBe("5 rows in set (0.01 sec) CU (2.5)");
+    });
+
+    it("does not append a CU suffix when capacityUnits is undefined", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 10,
+        selectedRows: 5,
+        dynamoDb: { apiOperation: "Query", evaluatedItemCount: 50 },
+      });
+      expect(rdb.rs.summary.info).toBe("5 rows in set (0.01 sec)");
+    });
+
+    it("uses the caller-supplied info verbatim for a select when provided", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        info: "38 items returned • 90 ms • Capacity not reported",
+        elapsedTimeMilli: 90,
+        selectedRows: 38,
+      });
+      expect(rdb.rs.summary.info).toBe(
+        "38 items returned • 90 ms • Capacity not reported"
+      );
+    });
+
+    it("uses the caller-supplied info verbatim for a write when provided", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        info: "1 item written • 12 ms • 1 WCU",
+        elapsedTimeMilli: 12,
+        affectedRows: 1,
+      });
+      expect(rdb.rs.summary.info).toBe("1 item written • 12 ms • 1 WCU");
+    });
+
+    it("does not append an automatic CU suffix when info is supplied, even if capacityUnits is set", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        info: "5 items returned • 10 ms • 2.5 RCU",
+        elapsedTimeMilli: 10,
+        selectedRows: 5,
+        capacityUnits: 2.5,
+      });
+      expect(rdb.rs.summary.info).toBe("5 items returned • 10 ms • 2.5 RCU");
+    });
+
+    it("keeps all structured fields alongside a caller-supplied info", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        info: "25 returned / 100 evaluated • 42 ms • 1.5 RCU • 25% pass",
+        elapsedTimeMilli: 42,
+        selectedRows: 25,
+        dynamoDb: {
+          apiOperation: "Query",
+          returnedItemCount: 25,
+          evaluatedItemCount: 100,
+          successfulResponseCount: 1,
+          sdkRetryCount: 0,
+          consumedCapacity: { totalReadCapacityUnits: 1.5 },
+          continuationTokenPresent: false,
+        },
+      });
+      expect(rdb.rs.summary).toEqual({
+        info: "25 returned / 100 evaluated • 42 ms • 1.5 RCU • 25% pass",
+        elapsedTimeMilli: 42,
+        selectedRows: 25,
+        capacityUnits: undefined,
+        dynamoDb: {
+          apiOperation: "Query",
+          returnedItemCount: 25,
+          evaluatedItemCount: 100,
+          successfulResponseCount: 1,
+          sdkRetryCount: 0,
+          consumedCapacity: { totalReadCapacityUnits: 1.5 },
+          continuationTokenPresent: false,
+        },
+      });
+    });
+
+    it("holds a DynamoDB ExecuteStatement summary with evaluatedItemCount left undefined", () => {
+      const rdb = createBuilder();
+      rdb.setSummary({
+        elapsedTimeMilli: 15,
+        selectedRows: 10,
+        dynamoDb: {
+          apiOperation: "ExecuteStatement",
+          returnedItemCount: 10,
+          successfulResponseCount: 1,
+        },
+      });
+      expect(rdb.rs.summary.dynamoDb?.evaluatedItemCount).toBeUndefined();
+      expect(rdb.rs.summary.dynamoDb?.apiOperation).toBe("ExecuteStatement");
+    });
+  });
 });

@@ -86,7 +86,76 @@ export type RdhRow = {
   readonly values: { [key: string]: any };
 };
 
+// Per-scope DynamoDB Capacity Unit amounts, as reported by
+// ConsumedCapacity.Table / .LocalSecondaryIndexes / .GlobalSecondaryIndexes.
+export type RdhDynamoDbCapacityAmount = {
+  capacityUnits?: number;
+  readCapacityUnits?: number;
+  writeCapacityUnits?: number;
+};
+
+// Consumed Capacity breakdown for one DynamoDB Query/Scan/ExecuteStatement
+// execution (possibly across multiple paginated responses, already summed).
+export type RdhDynamoDbConsumedCapacity = {
+  totalCapacityUnits?: number;
+  totalReadCapacityUnits?: number;
+  totalWriteCapacityUnits?: number;
+  table?: RdhDynamoDbCapacityAmount;
+  localSecondaryIndexes?: Record<string, RdhDynamoDbCapacityAmount>;
+  globalSecondaryIndexes?: Record<string, RdhDynamoDbCapacityAmount>;
+};
+
+// The DynamoDB structure used to read the result. An index type can be
+// unknown when a custom endpoint executes a valid request but does not expose
+// complete DescribeTable metadata.
+export type RdhDynamoDbAccessPath =
+  | { type: "table" }
+  | {
+      type: "index";
+      indexName: string;
+      indexType?: "LSI" | "GSI";
+    };
+
+// DynamoDB-specific execution evidence for one Query/Scan/ExecuteStatement,
+// namespaced so the meaning and scope of each value stay unambiguous. This
+// is the single source of truth for DynamoDB API telemetry; it does not
+// mirror or replace the generic selectedRows/capacityUnits fields below.
+export type RdhDynamoDbSummary = {
+  apiOperation: "Query" | "Scan" | "ExecuteStatement";
+
+  // Table or secondary index used by this operation. Kept as structured
+  // evidence so consumers do not need to parse RdhSummary.info or query text.
+  accessPath?: RdhDynamoDbAccessPath;
+
+  // Item count adopted into the response after Filter was applied.
+  // For native Query/Scan, the sum of Count across all paginated responses.
+  returnedItemCount?: number;
+
+  // Item count DynamoDB evaluated before Filter was applied.
+  // Sum of ScannedCount across all paginated responses for native
+  // Query/Scan. Left undefined for ExecuteStatement.
+  evaluatedItemCount?: number;
+
+  // Number of successful paginated responses. Does not include SDK retries.
+  successfulResponseCount?: number;
+
+  // Additional attempts derived from the AWS SDK's response metadata.
+  sdkRetryCount?: number;
+
+  // Whether a LastEvaluatedKey/NextToken remained when execution stopped.
+  // This only means the later key range was not evaluated - it does not
+  // guarantee a matching item exists there.
+  continuationTokenPresent?: boolean;
+
+  consumedCapacity?: RdhDynamoDbConsumedCapacity;
+};
+
 export type RdhSummary = {
+  // Display text for Query Result-style headings. Callers usually leave
+  // ResultSetDataBuilder.setSummary() to generate the default RDB-oriented
+  // "N rows in set (...)"/"N rows affected (...)" text; a caller with
+  // store-specific display rules (e.g. DynamoDB) can instead pass its own
+  // `info` and have it stored verbatim.
   info: string;
   elapsedTimeMilli: number;
   selectedRows?: number;
@@ -94,6 +163,9 @@ export type RdhSummary = {
   insertId?: number;
   changedRows?: number;
   capacityUnits?: number;
+  // DynamoDB API execution evidence, namespaced separately from the
+  // generic fields above. See RdhDynamoDbSummary for field meanings.
+  dynamoDb?: RdhDynamoDbSummary;
 };
 
 export type ResultSetData = {

@@ -2,6 +2,7 @@ import * as ss from "simple-statistics";
 import {
   AnnotationType,
   GeneralColumnType as GC,
+  RdhDynamoDbSummary,
   RdhKey,
   RdhMeta,
   RdhRow,
@@ -543,46 +544,65 @@ export class ResultSetDataBuilder {
   }
 
   setSummary({
+    info,
     elapsedTimeMilli,
     selectedRows,
     affectedRows,
     insertId,
     changedRows,
     capacityUnits,
+    dynamoDb,
   }: {
+    // Caller-supplied display text for RdhSummary.info. When omitted, the
+    // existing RDB-oriented "N rows in set (...)"/"N rows affected (...)"
+    // text is generated as before (backward compatible for RDB, Redis,
+    // Memcached, etc. callers). When provided (e.g. by a DynamoDB-specific
+    // formatter), it is used verbatim and the automatic " CU (...)" suffix
+    // below is skipped - the caller's formatter is expected to already
+    // include any Capacity text it wants shown.
+    info?: string;
     elapsedTimeMilli: number;
     selectedRows?: number;
     affectedRows?: number;
     insertId?: number;
     changedRows?: number;
     capacityUnits?: number;
+    // DynamoDB API execution evidence. Stored verbatim under
+    // RdhSummary.dynamoDb; not produced or interpreted for other vendors.
+    dynamoDb?: RdhDynamoDbSummary;
   }): void {
     const elapsedTime = (elapsedTimeMilli / 1000).toFixed(2);
 
     if (selectedRows === undefined) {
       // insert, update, delete
       this.rs.summary = {
-        info: `${affectedRows} row${
-          affectedRows === 1 ? "" : "s"
-        } affected (${elapsedTime} sec)`,
+        info:
+          info ??
+          `${affectedRows} row${
+            affectedRows === 1 ? "" : "s"
+          } affected (${elapsedTime} sec)`,
         elapsedTimeMilli,
         insertId: insertId,
         affectedRows: affectedRows,
         changedRows: changedRows,
         capacityUnits,
+        dynamoDb,
       };
     } else {
       // select
       this.rs.summary = {
-        info: `${selectedRows} row${
-          selectedRows === 1 ? "" : "s"
-        } in set (${elapsedTime} sec)`,
+        info:
+          info ??
+          `${selectedRows} row${
+            selectedRows === 1 ? "" : "s"
+          } in set (${elapsedTime} sec)`,
         elapsedTimeMilli,
         selectedRows,
         capacityUnits,
+        dynamoDb,
       };
     }
-    if (capacityUnits !== undefined) {
+    if (info === undefined && capacityUnits !== undefined) {
       this.rs.summary.info += ` CU (${capacityUnits})`;
     }
   }
