@@ -17,7 +17,7 @@ import {
 } from "./diffTestSupport";
 
 describe("annotations", () => {
-  it("preserves existing Cod/Rul/Lnt/Stl/Fil annotations while adding Upd", () => {
+  it("preserves existing Cod/Lnt/Stl/Fil annotations while adding Upd", () => {
     const rdb1 = buildRdb(idValKeys, [{ id: 1, val: "a" }], [primaryCompareKey]);
     const rdb2 = buildRdb(idValKeys, [{ id: 1, val: "b" }], [primaryCompareKey]);
 
@@ -25,10 +25,6 @@ describe("annotations", () => {
     RowHelper.pushAnnotation(row1, "val", {
       type: "Cod",
       values: { label: "Label", isUndefined: false },
-    });
-    RowHelper.pushAnnotation(row1, "val", {
-      type: "Rul",
-      values: { name: "r1", message: "m", conditionValues: {} },
     });
     RowHelper.pushAnnotation(row1, "val", {
       type: "Lnt",
@@ -55,7 +51,6 @@ describe("annotations", () => {
 
     expect(RowHelper.getFirstAnnotationOf(outRow1, "val", "Upd")).toBeDefined();
     expect(RowHelper.getFirstAnnotationOf(outRow1, "val", "Cod")).toBeDefined();
-    expect(RowHelper.getFirstAnnotationOf(outRow1, "val", "Rul")).toBeDefined();
     expect(RowHelper.getFirstAnnotationOf(outRow1, "val", "Lnt")).toBeDefined();
     expect(RowHelper.getFirstAnnotationOf(outRow1, "val", "Stl")).toBeDefined();
     expect(RowHelper.getFirstAnnotationOf(outRow1, "val", "Fil")).toBeDefined();

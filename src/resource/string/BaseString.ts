@@ -5,7 +5,6 @@ import {
   RdhKey,
   RdhRow,
   ResultSetData,
-  RuleAnnotation,
   ToStringParam,
 } from "../../types";
 import { abbr } from "../../utils";
@@ -48,28 +47,6 @@ export abstract class BaseString {
         ? this.rdh.keys.filter((k) => this.params.keyNames.includes(k.name))
         : this.rdh.keys;
     this.hasKeyComment = this.rdhKeys.some((k) => !!k.comment);
-  }
-
-  /**
-   * withCodeLabel/withRuleViolationの設定を踏まえて、1セル分のコード
-   * ラベル・ルール違反マーカーをまとめて取得する。各フォーマットの行描画
-   * (pushRowData/PlainString.toString())で同じ2行(label取得・ruleMarker
-   * 取得)が重複していたため、ここへ共通化する。
-   */
-  protected resolveCellDecorations(
-    row: RdhRow,
-    keyName: string
-  ): {
-    label: CodeResolvedAnnotation["values"] | undefined;
-    ruleMarker: string | undefined;
-  } {
-    const { withCodeLabel, withRuleViolation } = this.params;
-    return {
-      label: withCodeLabel ? this.resolveCodeLabel(row, keyName) : undefined,
-      ruleMarker: withRuleViolation
-        ? this.resolveRuleMarkers(row, keyName)
-        : undefined,
-    };
   }
 
   /** バイナリを16進文字列へ変換する際に読む最大バイト数。 */
@@ -159,37 +136,6 @@ export abstract class BaseString {
     )?.values;
   }
 
-  resolveRuleMarkers(row: RdhRow, keyName: string): string | undefined {
-    const { ruleViolationSummary } = this.rdh.meta;
-    if (ruleViolationSummary === undefined) {
-      return undefined;
-    }
-    const rules = RowHelper.filterAnnotationByKeyOf<RuleAnnotation>(
-      row,
-      keyName,
-      "Rul"
-    );
-    const marks: number[] = [];
-    const names = Object.keys(ruleViolationSummary);
-    names.forEach((it, idx) => {
-      if (rules.some((rule) => rule.values.name === it)) {
-        marks.push(idx + 1);
-      }
-    });
-    return marks.length > 0 ? `*${marks.join(",")}` : undefined;
-  }
-  createRuleMarkerLegend(eol: "\n" | "\r" | "\r\n" = EOL): string | undefined {
-    const { ruleViolationSummary } = this.rdh.meta;
-    if (ruleViolationSummary === undefined) {
-      return undefined;
-    }
-    return Object.keys(ruleViolationSummary)
-      .map(
-        (ruleName, idx) =>
-          `*${idx + 1}: ${ruleName}: ${ruleViolationSummary[ruleName]}`
-      )
-      .join(eol);
-  }
   private initToStringParam(): ToStringParam {
     return {
       maxPrintLines: MAX_PRINT_LINE,
@@ -198,7 +144,6 @@ export abstract class BaseString {
       withComment: false,
       withRowNo: false,
       withCodeLabel: false,
-      withRuleViolation: false,
       eol: EOL,
       keyNames: [],
       dateFormat: "YYYY-MM-DD",

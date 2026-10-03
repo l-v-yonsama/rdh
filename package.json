@@ -1,6 +1,6 @@
 {
   "name": "@l-v-yonsama/rdh",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "packageManager": "npm@10.9.4",
   "description": "Database resultset data holder in TypeScript.",
   "engines": {
@@ -8,7 +8,6 @@
   },
   "devDependencies": {
     "@types/jest": "~29.2",
-    "@types/json-rules-engine": "^4.1.0",
     "@types/lodash.isequal": "^4.5.6",
     "@types/node": "22.18.10",
     "@typescript-eslint/eslint-plugin": "~8.67",

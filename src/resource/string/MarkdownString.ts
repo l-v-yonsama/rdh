@@ -63,28 +63,22 @@ export class MarkdownString extends TabularContentString {
   }
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   createPreBody(): void {}
-  createPostBody(): void {
-    const { withRuleViolation, eol } = this.params;
-    if (withRuleViolation) {
-      const legend = this.createRuleMarkerLegend(eol);
-      if (legend) {
-        this.append(eol + "```" + eol + legend + eol + "```");
-      }
-    }
-  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  createPostBody(): void {}
 
   pushRowData(row: RdhRow, rowNo: number): void {
     const { rdhKeys } = this;
     const { withRowNo } = this.params;
     const retRow = new Array<any>();
     rdhKeys.forEach((key) => {
-      const { label, ruleMarker } = this.resolveCellDecorations(row, key.name);
+      const label = this.params.withCodeLabel
+        ? this.resolveCodeLabel(row, key.name)
+        : undefined;
 
       retRow.push(
         this.toMarkdownString(row.values[key.name], {
           keyType: key.type,
           label,
-          ruleMarker,
         })
       );
     });
@@ -112,7 +106,6 @@ export class MarkdownString extends TabularContentString {
     opt?: {
       keyType?: GeneralColumnType;
       label?: CodeResolvedAnnotation["values"];
-      ruleMarker?: string;
     }
   ): string {
     let s;
@@ -127,9 +120,6 @@ export class MarkdownString extends TabularContentString {
           s += ` <${opt.label.label}>`;
         }
       }
-    }
-    if (opt?.ruleMarker) {
-      s = `\`${opt.ruleMarker}\` ${s}`;
     }
     s = `${s
       .replace(/ {2}/g, "&emsp;")

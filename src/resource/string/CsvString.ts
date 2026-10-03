@@ -49,15 +49,8 @@ export class CsvString extends TabularContentString {
   }
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   createPreBody(): void {}
-  createPostBody(): void {
-    const { withRuleViolation, eol } = this.params;
-    if (withRuleViolation) {
-      const legend = this.createRuleMarkerLegend(eol);
-      if (legend) {
-        this.append(eol + "```" + eol + legend + eol + "```");
-      }
-    }
-  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  createPostBody(): void {}
 
   pushRowData(row: RdhRow, rowNo: number): void {
     const { rdhKeys, delimiter } = this;
@@ -67,12 +60,13 @@ export class CsvString extends TabularContentString {
       rowValues.push(`${rowNo}`);
     }
     rdhKeys.forEach((key) => {
-      const { label, ruleMarker } = this.resolveCellDecorations(row, key.name);
+      const label = this.params.withCodeLabel
+        ? this.resolveCodeLabel(row, key.name)
+        : undefined;
       rowValues.push(
         this.toCsvString(row.values[key.name], {
           keyType: key.type,
           label,
-          ruleMarker,
         })
       );
     });
@@ -97,7 +91,6 @@ export class CsvString extends TabularContentString {
     opt?: {
       keyType?: GeneralColumnType;
       label?: CodeResolvedAnnotation["values"];
-      ruleMarker?: string;
     }
   ): string {
     let s;
@@ -108,9 +101,6 @@ export class CsvString extends TabularContentString {
       if (opt?.label) {
         s += ` <${opt.label.label}>`;
       }
-    }
-    if (opt?.ruleMarker) {
-      s = `${opt.ruleMarker} ${s}`;
     }
     s = `"${s.replace(/"/g, '""')}"`;
     return s;

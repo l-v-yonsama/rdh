@@ -7,7 +7,6 @@ export const AnnotationTypeConst = {
   Err: "Err",
   Lnt: "Lnt", // LintAnnotation
   Stl: "Stl", // StyleAnnotation
-  Rul: "Rul", // RuleAnnotation
   Cod: "Cod", // CodeResolvedAnnotation
   Fil: "Fil", // FileAnnotation
   CIN: "Cin", // ChangeInNumbersAnnotation
@@ -21,7 +20,6 @@ export type CellAnnotation =
   | AddAnnotation
   | UpdateAnnotation
   | ErrorAnnotation
-  | RuleAnnotation
   | LintAnnotation
   | StyleAnnotation
   | CodeResolvedAnnotation
@@ -45,15 +43,6 @@ export type UpdateAnnotation = BaseCellAnnotation<
 >;
 
 export type ErrorAnnotation = BaseCellAnnotation<"Err">;
-
-export type RuleAnnotation = BaseCellAnnotation<
-  "Rul",
-  {
-    name: string;
-    message: string;
-    conditionValues: { [key: string]: any };
-  }
->;
 
 export type CodeResolvedAnnotation = BaseCellAnnotation<
   "Cod",

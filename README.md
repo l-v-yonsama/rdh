@@ -211,7 +211,6 @@ const markdown = result.toMarkdown({
   withComment: true,
   withRowNo: true,
   withCodeLabel: true,
-  withRuleViolation: true,
   keyNames: ["id", "name"],
   dateFormat: "YYYY-MM-DD",
   timestampFormat: "YYYY-MM-DD HH:mm:ss.SSS",
@@ -347,14 +346,13 @@ Supported annotation categories include:
 | `Del` | Deleted row/cell |
 | `Upd` | Updated cell, including the other value |
 | `Err` | Error marker |
-| `Rul` | Record-rule violation |
 | `Cod` | Resolved code label |
 | `Lnt` | Lint result |
 | `Stl` | Display style |
 | `Fil` | File metadata |
 | `Cin` | Numeric change information |
 
-Markdown, HTML, CSV, and plain-text renderers can include code labels and rule-violation markers. HTML output also applies classes for addition, deletion, update, and error annotations.
+Markdown, HTML, CSV, and plain-text renderers can include code labels. HTML output also applies classes for addition, deletion, update, and error annotations.
 
 ## Resolving code labels
 

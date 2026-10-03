@@ -61,28 +61,9 @@ export class HtmlString extends TabularContentString {
     this.append("<tbody>");
   }
   createPostBody(): void {
-    const { rdh } = this;
-    const { withRuleViolation } = this.params;
-
     this.append("</tbody>");
     this.append("</table>");
     this.append("</div>");
-    if (withRuleViolation && rdh.meta?.ruleViolationSummary) {
-      this.append("<blockquote>");
-      this.append('<div class="content is-small">');
-      this.append("<ul>");
-      const { ruleViolationSummary } = rdh.meta;
-      Object.keys(ruleViolationSummary).forEach((ruleName, idx) => {
-        this.append(
-          `<li>*${idx + 1}: ${this.toHtmlString(ruleName)}: ${this.toHtmlString(
-            ruleViolationSummary[ruleName]
-          )}</li>`
-        );
-      });
-      this.append("</ul>");
-      this.append("</div>");
-      this.append("</blockquote>");
-    }
   }
 
   pushRowData(row: RdhRow, rowNo: number): void {
@@ -106,7 +87,9 @@ export class HtmlString extends TabularContentString {
 
     const retRow = new Array<any>();
     rdhKeys.forEach((key) => {
-      const { label, ruleMarker } = this.resolveCellDecorations(row, key.name);
+      const label = this.params.withCodeLabel
+        ? this.resolveCodeLabel(row, key.name)
+        : undefined;
 
       let clazz = "";
       if (updated) {
@@ -130,7 +113,6 @@ export class HtmlString extends TabularContentString {
         s: this.toHtmlString(row.values[key.name], {
           keyType: key.type,
           label,
-          ruleMarker,
         }),
       });
     });
@@ -172,7 +154,6 @@ export class HtmlString extends TabularContentString {
     opt?: {
       keyType?: GeneralColumnType;
       label?: CodeResolvedAnnotation["values"];
-      ruleMarker?: string;
     }
   ): string {
     let s;
@@ -192,11 +173,6 @@ export class HtmlString extends TabularContentString {
           )}</span>`;
         }
       }
-    }
-    if (opt?.ruleMarker) {
-      s = `<span class="tag is-info is-light">${escapeHtml(
-        opt.ruleMarker
-      )}</span> <span class="tag is-success is-light">${escapeHtml(s)}</span>`;
     }
     return s;
   }

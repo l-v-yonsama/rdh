@@ -1,33 +1,11 @@
-import dayjs from "dayjs";
 import {
   AnnotationType,
   CellAnnotation,
-  RdhKey,
   RdhRow,
   ResultSetData,
-  RuleAnnotation,
-  TableRuleDetail,
 } from "../types";
-import { isDateTimeOrDate } from "./GeneralColumnUtil";
 
 export class RowHelper {
-  static getRuleEngineValues(row: RdhRow, keys: RdhKey[]): Record<string, any> {
-    const ret: Record<string, any> = {};
-    keys.forEach((key) => {
-      const v = row.values[key.name];
-      if (isDateTimeOrDate(key.type)) {
-        if (v === null || v === undefined) {
-          ret[key.name] = v;
-        } else {
-          ret[key.name] = dayjs(v).valueOf();
-        }
-      } else {
-        ret[key.name] = v;
-      }
-    });
-    return ret;
-  }
-
   static pushAnnotation(
     row: RdhRow,
     key: string,
@@ -124,28 +102,6 @@ export class RowHelper {
     return this.hasAnyAnnotation(row, [type]);
   }
 
-  static hasRuleAnnotation(row: RdhRow, ruleDetail: TableRuleDetail): boolean {
-    if (row.meta && row.meta[ruleDetail.error.column]) {
-      const v = row.meta[ruleDetail.error.column];
-      return v.some(
-        (it) => it.type === "Rul" && it.values.name === ruleDetail.ruleName
-      );
-    }
-    return false;
-  }
-
-  static getFirstRuleAnnotation(
-    row: RdhRow,
-    ruleDetail: TableRuleDetail
-  ): RuleAnnotation | undefined {
-    if (row.meta && row.meta[ruleDetail.error.column]) {
-      const v = row.meta[ruleDetail.error.column];
-      return v.find(
-        (it) => it.type === "Rul" && it.values.name === ruleDetail.ruleName
-      ) as RuleAnnotation;
-    }
-    return undefined;
-  }
 }
 
 export class RdhHelper {

@@ -122,7 +122,7 @@ function resolveDiffContext(
   // あるUpd/Del/Addを型スコープでクリアする。db-notebook側ではdiffを繰り返し
   // 実行する運用があり、渡されるrdh1/rdh2自体が前回のdiff結果(=非破壊化後は
   // 前回のクローン)を再利用することがあるため、古いUpd/Del/Addを引き継がない
-  // ようにする。Cod/Rul/Lnt/Stl/Filなど他の既存アノテーションはここでは触らない。
+  // ようにする。Cod/Lnt/Stl/Filなど他の既存アノテーションはここでは触らない。
   // 引数rdh1/rdh2そのものは一切変更しない(非破壊)。
   RdhHelper.clearAnnotationsByType(rdb1.rs, DIFF_ANNOTATION_TYPES);
   RdhHelper.clearAnnotationsByType(rdb2.rs, DIFF_ANNOTATION_TYPES);

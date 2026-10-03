@@ -3,7 +3,6 @@ import type { CodeItem } from "./CodeResolverTypes";
 import type { CompareKey } from "./CompareKey";
 import type { GeneralColumnType } from "./GeneralColumnType";
 import type { QueryConditions } from "./QueryConditions";
-import type { TableRule } from "./Rules";
 import { isRecord } from "../../utils/base";
 
 export type RdhMeta = {
@@ -14,10 +13,6 @@ export type RdhMeta = {
   comment?: string;
   compareKeys?: CompareKey[];
   type?: string;
-  tableRule?: TableRule;
-  ruleViolationSummary?: {
-    [ruleName: string]: number;
-  };
   codeItems?: CodeItem[];
   editable?: boolean;
   [key: string]: any;
@@ -31,7 +26,6 @@ export type ToStringParam = {
   withComment?: boolean;
   withRowNo?: boolean;
   withCodeLabel?: boolean;
-  withRuleViolation?: boolean;
   keyNames?: string[];
   dateFormat?: "YYYY-MM-DD" | "YYYY-MM-DD HH:mm:ss";
   timestampFormat?:

@@ -15,7 +15,7 @@ export class PlainString extends BaseString {
   }
 
   toString(): string {
-    const { maxPrintLines, withType, withComment, withRowNo, withRuleViolation, eol } =
+    const { maxPrintLines, withType, withComment, withRowNo, eol } =
       this.params;
     const { rdh, rdhKeys, hasKeyComment } = this;
 
@@ -55,12 +55,13 @@ export class PlainString extends BaseString {
         buf.d(rowNo);
       }
       rdhKeys.forEach((k) => {
-        const { label, ruleMarker } = this.resolveCellDecorations(row, k.name);
+        const label = this.params.withCodeLabel
+          ? this.resolveCodeLabel(row, k.name)
+          : undefined;
         buf.d(
           this.toShortString(row.values[k.name], {
             keyType: k.type,
             label,
-            ruleMarker,
           })
         );
       });
@@ -82,13 +83,7 @@ export class PlainString extends BaseString {
       plan.tail.forEach(pushDataRow);
     }
 
-    let s = buf.toString();
-    if (withRuleViolation) {
-      const legend = this.createRuleMarkerLegend(eol);
-      if (legend) {
-        s += eol + eol + legend;
-      }
-    }
+    const s = buf.toString();
     return s + eol;
   }
 
@@ -97,7 +92,6 @@ export class PlainString extends BaseString {
     opt?: {
       keyType?: GeneralColumnType;
       label?: CodeResolvedAnnotation["values"];
-      ruleMarker?: string;
     }
   ): string {
     let s;
@@ -108,9 +102,6 @@ export class PlainString extends BaseString {
       if (opt?.label) {
         s += ` <${opt.label.label}>`;
       }
-    }
-    if (opt?.ruleMarker) {
-      s = `${opt.ruleMarker} ${s}`;
     }
     return s;
   }
